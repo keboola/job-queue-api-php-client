@@ -1,0 +1,274 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dev-mysql-initdb-config
+  namespace: dev-job-queue-api-php-client
+data:
+  initdb.sql: |
+    CREATE DATABASE IF NOT EXISTS api;
+    CREATE DATABASE IF NOT EXISTS scheduler;
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dev-mysql
+  namespace: dev-job-queue-api-php-client
+  labels:
+    app: dev-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dev-mysql
+  template:
+    metadata:
+      labels:
+        app: dev-mysql
+    spec:
+      containers:
+        - name: dev-mysql
+          image: mysql:8
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "512Mi"
+          ports:
+            - containerPort: 3312
+          args:
+            - --default-authentication-plugin=mysql_native_password
+          volumeMounts:
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: databasePassword
+      volumes:
+        - name: initdb
+          configMap:
+            name: dev-mysql-initdb-config
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dev-job-queue-internal-api
+  namespace: dev-job-queue-api-php-client
+  labels:
+    app: dev-job-queue-internal-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dev-job-queue-internal-api
+  template:
+    metadata:
+      labels:
+        app: dev-job-queue-internal-api
+    spec:
+      containers:
+        - name: dev-job-queue-internal-api
+          image: keboolapes.azurecr.io/job-queue-internal-api:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+          command:
+            - "/bin/sh"
+          args:
+            - "-c"
+            - 'php bin/console doctrine:migrations:migrate --no-interaction && apache2-foreground'
+          env:
+            - name: storage_api_url
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: storageApiUrl
+            - name: logs_s3_bucket
+              value: ''
+            - name: log_abs_container
+              value: ''
+            - name: log_abs_connection_string
+              value: ''
+            - name: DATABASE_HOST
+              value: 'dev-mysql-service'
+            - name: DATABASE_PORT
+              value: '3312'
+            - name: DATABASE_USER
+              value: 'root'
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: databasePasswordUrlencoded
+            - name: DATABASE_NAME
+              value: 'api'
+          readinessProbe:
+            httpGet:
+              path: /health-check
+              port: 80
+              httpHeaders:
+                - name: Host
+                  value: KubernetesReadinessProbe
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /health-check
+              httpHeaders:
+                - name: Host
+                  value: KubernetesLivelinessProbe
+            initialDelaySeconds: 60
+            periodSeconds: 100
+            successThreshold: 1
+            failureThreshold:
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dev-job-queue-api
+  namespace: dev-job-queue-api-php-client
+  labels:
+    app: dev-job-queue-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dev-job-queue-api
+  template:
+    metadata:
+      labels:
+        app: dev-job-queue-api
+    spec:
+      containers:
+        - name: job-queue-api
+          image: keboolapes.azurecr.io/job-queue-api:production-2574d5bd5fe0475106979cd8b436a4d969317cbd
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+          env:
+            - name: STORAGE_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: storageApiUrl
+            - name: LOGS_S3_BUCKET
+              value: ''
+            - name: LOG_ABS_CONTAINER
+              value: ''
+            - name: LOG_ABS_CONNECTION_STRING
+              value: ''
+            - name: INTERNAL_API_URL
+              value: 'http://dev-job-queue-internal-api-service:92'
+            - name: AZURE_KEY_VAULT_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: azureKeyVaultUrl
+            - name: DNS_NAME
+              value: 'dev-job-queue-internal-api-service'
+
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: azureTenantId
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: azureClientId
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-job-queue-api-php-client-environments
+                  key: azureClientSecret
+
+          readinessProbe:
+            httpGet:
+              path: /health-check
+              port: 80
+              httpHeaders:
+                - name: Host
+                  value: KubernetesReadinessProbe
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /health-check
+              httpHeaders:
+                - name: Host
+                  value: KubernetesLivelinessProbe
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dev-job-queue-internal-api-service
+  namespace: dev-job-queue-api-php-client
+spec:
+  type: LoadBalancer
+  selector:
+    app: dev-job-queue-internal-api
+  ports:
+    - port: 92
+      targetPort: 80
+      protocol: TCP
+      name: http
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dev-job-queue-api-service
+  namespace: dev-job-queue-api-php-client
+spec:
+  type: LoadBalancer
+  selector:
+    app: dev-job-queue-api
+  ports:
+    - port: 94
+      targetPort: 80
+      protocol: TCP
+      name: http
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dev-mysql-service
+  namespace: dev-job-queue-api-php-client
+spec:
+  type: LoadBalancer
+  selector:
+    app: dev-mysql
+  ports:
+    - port: 3312
+      targetPort: 3306
+      protocol: TCP
+      name: mysql
