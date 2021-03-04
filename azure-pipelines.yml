@@ -44,6 +44,7 @@ stages:
               kubectl apply -f ./provisioning/environments.yaml
               kubectl apply -f ./provisioning/public-api.yaml
 
+              kubectl rollout status deployment/dev-job-queue-internal-api --namespace=$KUBERNETES_NAMESPACE --timeout=900s
               kubectl rollout status deployment/dev-job-queue-api --namespace=$KUBERNETES_NAMESPACE --timeout=900s
 
               # wait for ingress to get ip
