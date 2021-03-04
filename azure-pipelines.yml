@@ -30,7 +30,7 @@ stages:
               command: login
           - script: |
               set -Eeuo pipefail
-              source ./provisioning/azure/scripts/functions.sh
+              source ./provisioning/functions.sh
 
               # strip new lines
               db_password_raw=$(openssl rand -base64 32 | tr -d '\n')
