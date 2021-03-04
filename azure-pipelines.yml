@@ -40,7 +40,7 @@ stages:
               export db_password_urlencoded=$(printf "%s" "$db_password_urlencoded_raw" | base64 --wrap=0)
               export test_azure_client_secret=$(printf "%s" "$test_azure_client_secret" | base64 --wrap=0)
 
-              envsubst < ./provisioning/dev/environments.yaml.template > ./provisioning/dev/environments.yaml
+              envsubst < ./provisioning/environments.yaml.template > ./provisioning/environments.yaml
               kubectl apply -f ./provisioning/environments.yaml
               kubectl apply -f ./provisioning/public-api.yaml
 
