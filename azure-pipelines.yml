@@ -79,14 +79,14 @@ stages:
           - script: |
               set -Eeuo pipefail
 
-              echo "Public API URL: $queue_api_url"
+              echo "Public API URL: $public_queue_api_url"
 
               docker-compose build --pull
               docker-compose run --rm tests
             displayName: 'Build & Run Tests'
             env:
               test_storage_api_token: $(test_storage_api_token)
-              queue_api_url: http://$(QUEUE_PUBLIC_API_IP):94
+              public_queue_api_url: http://$(QUEUE_PUBLIC_API_IP):94
 
           - task: PublishTestResults@2
             displayName: 'Publish Test results'
