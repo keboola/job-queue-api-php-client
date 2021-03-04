@@ -9,7 +9,7 @@ services:
     volumes:
       - ./build/logs/:/code/build/logs/
     environment:
-      queue_api_url:
+      public_queue_api_url:
       test_storage_api_token:
     command: ['composer', 'ci']
 
