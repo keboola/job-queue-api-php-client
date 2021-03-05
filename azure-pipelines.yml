@@ -122,8 +122,8 @@ stages:
               kubectl delete service dev-job-queue-internal-api-service --namespace=$KUBERNETES_NAMESPACE
               kubectl delete service dev-job-queue-api-service --namespace=$KUBERNETES_NAMESPACE
               kubectl delete service dev-mysql-service --namespace=$KUBERNETES_NAMESPACE
-              kubectl delete secret dev-scheduler-environments --namespace=$KUBERNETES_NAMESPACE
-              kubectl delete configmap dev-scheduler-environments --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete secret dev-job-queue-api-php-client-environments --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete configmap dev-job-queue-api-php-client-environments --namespace=$KUBERNETES_NAMESPACE
               kubectl delete configmap dev-mysql-initdb-config --namespace=$KUBERNETES_NAMESPACE
             displayName: Cleanup cluster
             env:
