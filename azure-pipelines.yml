@@ -34,6 +34,7 @@ stages:
 
               # strip new lines
               db_password_raw=$(openssl rand -base64 32 | tr -d '\n')
+              db_password_urlencoded_raw=$(urlencode "$db_password_raw")
               # for mysql database, we need the password to be base64 encoded to be stored in k8s secrets
               export db_password=$(printf "%s" "$db_password_raw" | base64 --wrap=0)
               # for internal api, we need the password to be urlencoded so that doctrine can take it and base64 encoded to be stores in k8s secrets
