@@ -85,9 +85,7 @@ class Client
         ) use ($maxRetries) {
             if ($retries >= $maxRetries) {
                 return false;
-            } elseif ($response && $response->getStatusCode() >= 500) {
-                return true;
-            } elseif ($error) {
+            } elseif ($error && $error->getCode() >= 500) {
                 return true;
             } else {
                 return false;

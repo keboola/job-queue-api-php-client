@@ -201,7 +201,7 @@ class ClientTest extends BaseTest
                 '{"message" => "Out of order"}'
             ),
             new Response(
-                500,
+                501,
                 ['Content-Type' => 'application/json'],
                 'Out of order'
             ),
@@ -292,5 +292,25 @@ class ClientTest extends BaseTest
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
         }
         self::assertCount(4, $requestHistory);
+    }
+
+    public function testNoRetry(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                401,
+                ['Content-Type' => 'application/json'],
+                '{"message" => "Unauthorized"}'
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mock);
+        $stack->push($history);
+        $client = $this->getClient(['handler' => $stack]);
+        self::expectException(ClientException::class);
+        self::expectExceptionMessage('{"message" => "Unauthorized"}');
+        $client->createJob(['123']);
     }
 }
