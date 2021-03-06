@@ -39,7 +39,7 @@ stages:
               export db_password=$(printf "%s" "$db_password_raw" | base64 --wrap=0)
               # for internal api, we need the password to be urlencoded so that doctrine can take it and base64 encoded to be stores in k8s secrets
               export db_password_urlencoded=$(printf "%s" "$db_password_urlencoded_raw" | base64 --wrap=0)
-              export test_azure_client_secret=$(printf "%s" "$test_azure_client_secret" | base64 --wrap=0)
+              export test_azure_client_secret_base64=$(printf "%s" "$test_azure_client_secret" | base64 --wrap=0)
 
               envsubst < ./provisioning/environments.yaml.template > ./provisioning/environments.yaml
               kubectl apply -f ./provisioning/environments.yaml
