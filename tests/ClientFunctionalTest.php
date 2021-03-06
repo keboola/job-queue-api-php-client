@@ -10,12 +10,13 @@ use Psr\Log\NullLogger;
 
 class ClientFunctionalTest extends BaseTest
 {
-    private function getClient(): Client
+    private function getClient(array $options = []): Client
     {
         return new Client(
             new NullLogger(),
             (string) getenv('public_queue_api_url'),
-            (string) getenv('test_storage_api_token')
+            (string) getenv('test_storage_api_token'),
+            $options
         );
     }
 
@@ -33,12 +34,9 @@ class ClientFunctionalTest extends BaseTest
 
     public function testCreateInvalidJob(): void
     {
-        $client = $this->getClient();
+        $client = $this->getClient(['handler' => 'garbage', 'logger' => 'garbage']);
         self::expectException(ClientException::class);
         self::expectExceptionMessage('Unrecognized option \"foo\" under \"job\". Available options are \"component\",');
-        $response = $client->createJob(['foo' => 'bar']);
-
-        self::assertNotEmpty($response['id']);
-        self::assertEquals('created', $response['status']);
+        $client->createJob(['foo' => 'bar']);
     }
 }
