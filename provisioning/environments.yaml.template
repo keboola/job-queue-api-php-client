@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-job-queue-api-php-client
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dev-job-queue-api-php-client-environments
+  namespace: dev-job-queue-api-php-client
+type: Opaque
+data:
+  databasePassword: '$db_password'
+  databasePasswordUrlencoded: '$db_password_urlencoded'
+  awsSecretAccessKey: '$test_aws_secret_access_key_base64'
+  azureClientSecret: '$test_azure_client_secret_base64'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dev-job-queue-api-php-client-environments
+  namespace: dev-job-queue-api-php-client
+data:
+  storageApiUrl: '$storage_api_url'
+  azureKeyVaultUrl: '$azure_key_vault_url'
+  azureTenantId: '$test_azure_tenant_id'
+  azureClientId: '$test_azure_client_id'
+  awsKmsRegion: '$test_kms_region'
+  awsKmsKeyId: '$test_kms_key_id'
+  awsAccessKey: '$test_aws_access_key_id'

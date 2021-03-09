@@ -1,0 +1,130 @@
+pr: none
+trigger:
+  batch: true
+  branches:
+    include:
+      - '*'
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  DOCKER_BUILDKIT: 1
+  k8sNamespace: 'dev-job-queue-api-php-client'
+  ciClusterServiceConnection: 'CI AKS'
+
+stages:
+  - stage: prepare
+    displayName: Prepare
+    jobs:
+      - job: services_setup
+        variables:
+          DECODE_PERCENTS: false # https://github.com/microsoft/azure-pipelines-agent/blob/master/docs/design/percentEncoding.md
+        displayName: 'Setup services'
+        steps:
+          - task: Kubernetes@1
+            displayName: kubectl login
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: $(ciClusterServiceConnection)
+              command: login
+          - script: |
+              set -Eeuo pipefail
+              source ./provisioning/functions.sh
+
+              # strip new lines
+              db_password_raw=$(openssl rand -base64 32 | tr -d '\n')
+              db_password_urlencoded_raw=$(urlencode "$db_password_raw")
+              # for mysql database, we need the password to be base64 encoded to be stored in k8s secrets
+              export db_password=$(printf "%s" "$db_password_raw" | base64 --wrap=0)
+              # for internal api, we need the password to be urlencoded so that doctrine can take it and base64 encoded to be stores in k8s secrets
+              export db_password_urlencoded=$(printf "%s" "$db_password_urlencoded_raw" | base64 --wrap=0)
+              export test_azure_client_secret_base64=$(printf "%s" "$test_azure_client_secret" | base64 --wrap=0)
+
+              envsubst < ./provisioning/environments.yaml.template > ./provisioning/environments.yaml
+              kubectl apply -f ./provisioning/environments.yaml
+              kubectl apply -f ./provisioning/public-api.yaml
+
+              kubectl rollout status deployment/dev-job-queue-internal-api --namespace=$KUBERNETES_NAMESPACE --timeout=900s
+              kubectl rollout status deployment/dev-job-queue-api --namespace=$KUBERNETES_NAMESPACE --timeout=900s
+
+              # wait for ingress to get ip
+              sleep 10
+
+              QUEUE_PUBLIC_API_IP=`kubectl get svc --output jsonpath --template "{.items[?(@.metadata.name==\"dev-job-queue-api-service\")].status.loadBalancer.ingress[].ip}" --namespace=$KUBERNETES_NAMESPACE`
+
+              echo "public:$QUEUE_PUBLIC_API_IP"
+              echo "##vso[task.setvariable variable=QUEUE_PUBLIC_API_IP;isOutput=true]$QUEUE_PUBLIC_API_IP"
+            displayName: 'Prepare cluster'
+            name: prepare_cluster
+            env:
+              KUBERNETES_NAMESPACE: $(k8sNamespace)
+              storage_api_url: $(storage_api_url)
+              azure_key_vault_url: $(azure_key_vault_url)
+              test_azure_tenant_id: $(test_azure_tenant_id)
+              test_azure_client_id: $(test_azure_client_id)
+              test_azure_client_secret: $(test_azure_client_secret)
+              test_aws_access_key_id: $(test_aws_access_key_id)
+              test_aws_secret_access_key: $(test_aws_secret_access_key)
+              test_kms_region: $(test_kms_region)
+              test_kms_key_id: $(test_kms_key_id)
+
+  - stage: tests
+    dependsOn: prepare
+    displayName: Build & Test
+    jobs:
+      - job: test
+        displayName: 'Test'
+        variables:
+          QUEUE_PUBLIC_API_IP: $[ stageDependencies.prepare.services_setup.outputs['prepare_cluster.QUEUE_PUBLIC_API_IP'] ]
+        steps:
+          - script: |
+              set -Eeuo pipefail
+
+              echo "Public API URL: $public_queue_api_url"
+
+              docker-compose build --pull
+              docker-compose run --rm tests
+            displayName: 'Build & Run Tests'
+            env:
+              test_storage_api_token: $(test_storage_api_token)
+              public_queue_api_url: http://$(QUEUE_PUBLIC_API_IP):94
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test results'
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: 'build/logs/*.xml'
+
+  - stage: cleanup
+    displayName: Cleanup
+    variables:
+      - name: isDebugBuild
+        value: ${{ startsWith(variables['Build.SourceBranch'],'refs/tags/debug') }}
+    condition: eq(variables['isDebugBuild'], 'false')
+    jobs:
+      - job:
+        displayName: Remove Services
+        steps:
+          - task: Kubernetes@1
+            displayName: kubectl login
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: $(ciClusterServiceConnection)
+              command: login
+
+          - script: |
+              set -Eeuo pipefail
+
+              kubectl delete deployment dev-mysql --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete deployment dev-job-queue-internal-api --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete deployment dev-job-queue-api --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete service dev-job-queue-internal-api-service --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete service dev-job-queue-api-service --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete service dev-mysql-service --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete secret dev-job-queue-api-php-client-environments --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete configmap dev-job-queue-api-php-client-environments --namespace=$KUBERNETES_NAMESPACE
+              kubectl delete configmap dev-mysql-initdb-config --namespace=$KUBERNETES_NAMESPACE
+            displayName: Cleanup cluster
+            env:
+              KUBERNETES_NAMESPACE: $(k8sNamespace)
