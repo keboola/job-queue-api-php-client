@@ -157,7 +157,7 @@ spec:
       containers:
         - name: job-queue-api
           image: keboolapes.azurecr.io/job-queue-api:production-2574d5bd5fe0475106979cd8b436a4d969317cbd
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: "200m"
