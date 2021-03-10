@@ -74,7 +74,7 @@ spec:
       containers:
         - name: dev-job-queue-internal-api
           image: keboolapes.azurecr.io/job-queue-internal-api:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "200m"
@@ -157,7 +157,7 @@ spec:
       containers:
         - name: job-queue-api
           image: keboolapes.azurecr.io/job-queue-api:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "200m"
