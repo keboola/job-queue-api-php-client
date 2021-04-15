@@ -29,8 +29,10 @@ class Client
     private const DEFAULT_BACKOFF_RETRIES = 3;
     private const JSON_DEPTH = 512;
 
-    protected GuzzleClient $guzzle;
-    private LoggerInterface $logger;
+    /** @var GuzzleClient */
+    protected $guzzle;
+    /** @var LoggerInterface */
+    private $logger;
 
     public function __construct(
         LoggerInterface $logger,
