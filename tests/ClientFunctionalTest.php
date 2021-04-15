@@ -6,6 +6,7 @@ namespace Keboola\JobQueueClient\Tests;
 
 use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\JobData;
 use Psr\Log\NullLogger;
 
 class ClientFunctionalTest extends BaseTest
@@ -23,10 +24,10 @@ class ClientFunctionalTest extends BaseTest
     public function testCreateJob(): void
     {
         $client = $this->getClient();
-        $response = $client->createJob([
-            'component' => 'keboola.ex-db-snowflake',
-            'config' => '123',
-        ]);
+        $response = $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            '123',
+        ));
 
         self::assertNotEmpty($response['id']);
         self::assertEquals('created', $response['status']);
@@ -34,9 +35,13 @@ class ClientFunctionalTest extends BaseTest
 
     public function testCreateInvalidJob(): void
     {
-        $client = $this->getClient(['handler' => 'garbage', 'logger' => 'garbage']);
+        $client = new Client(
+            new NullLogger(),
+            (string) getenv('public_queue_api_url'),
+            'invalid',
+        );
         self::expectException(ClientException::class);
-        self::expectExceptionMessage('Unrecognized option \"foo\" under \"job\". Available options are \"component\",');
-        $client->createJob(['foo' => 'bar']);
+        self::expectExceptionMessage('Invalid access token');
+        $client->createJob(new JobData('foo', '123'));
     }
 }
