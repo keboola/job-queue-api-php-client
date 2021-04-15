@@ -186,7 +186,7 @@ spec:
                 configMapKeyRef:
                   name: dev-job-queue-api-php-client-environments
                   key: azureKeyVaultUrl
-            - name: DNS_NAME
+            - name: TARGET_URL
               value: 'dev-job-queue-internal-api-service'
 
             - name: AZURE_TENANT_ID
