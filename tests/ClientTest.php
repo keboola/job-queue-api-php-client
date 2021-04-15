@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\JobData;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Psr\Log\Test\TestLogger;
@@ -123,7 +124,7 @@ class ClientTest extends BaseTest
         $stack = HandlerStack::create($mock);
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
-        $job = $client->createJob(['componentId' => 'keboola.ex-db-storage', 'config' => '123']);
+        $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         self::assertEquals('683194249', $job['id']);
         self::assertEquals('683194249', $job['runId']);
         self::assertEquals('created', $job['status']);
@@ -153,8 +154,9 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
         self::expectException(ClientException::class);
-        self::expectExceptionMessage('Unable to parse response body into JSON: Syntax error');
-        $client->createJob(['123']);
+        self::expectExceptionMessage('Invalid job data: Type is not supported');
+        $res = fopen(sys_get_temp_dir() . '/touch', 'w');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
     }
 
     public function testLogger(): void
@@ -184,7 +186,7 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $logger = new TestLogger();
         $client = $this->getClient(['handler' => $stack, 'logger' => $logger, 'userAgent' => 'test agent']);
-        $client->createJob(['123']);
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
         self::assertEquals('test agent', $request->getHeader('User-Agent')[0]);
@@ -228,7 +230,7 @@ class ClientTest extends BaseTest
         $stack = HandlerStack::create($mock);
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
-        $job = $client->createJob(['123']);
+        $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         self::assertEquals('683194249', $job['id']);
         self::assertEquals('683194249', $job['runId']);
         self::assertEquals('created', $job['status']);
@@ -260,7 +262,7 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 1]);
         try {
-            $client->createJob(['123']);
+            $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Must throw exception');
         } catch (ClientException $e) {
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
@@ -286,7 +288,7 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 3]);
         try {
-            $client->createJob(['123']);
+            $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Must throw exception');
         } catch (ClientException $e) {
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
@@ -311,6 +313,6 @@ class ClientTest extends BaseTest
         $client = $this->getClient(['handler' => $stack]);
         self::expectException(ClientException::class);
         self::expectExceptionMessage('{"message" => "Unauthorized"}');
-        $client->createJob(['123']);
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 }

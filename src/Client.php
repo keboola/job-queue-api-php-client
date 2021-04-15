@@ -64,11 +64,11 @@ class Client
         $this->logger = $logger;
     }
 
-    public function createJob(array $jobData): array
+    public function createJob(JobData $jobData): array
     {
         try {
-            $jobData = json_encode($jobData, JSON_THROW_ON_ERROR);
-            $request = new Request('POST', 'jobs', [], $jobData);
+            $jobDataJson = json_encode($jobData->getArray(), JSON_THROW_ON_ERROR);
+            $request = new Request('POST', 'jobs', [], $jobDataJson);
         } catch (JsonException $e) {
             throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
