@@ -1,4 +1,4 @@
-# Job Queue API PHP Client [![Build Status](https://dev.azure.com/keboola-dev/job-queue-api-php-client/_apis/build/status/keboola.job-queue-api-php-client?branchName=master)](https://dev.azure.com/keboola-dev/job-queue-api-php-client/_build/latest?definitionId=3&branchName=master)
+# Job Queue API PHP Client [![Build Status](https://dev.azure.com/keboola-dev/job-queue-api-php-client/_apis/build/status/keboola.job-queue-api-php-client?branchName=main)](https://dev.azure.com/keboola-dev/job-queue-api-php-client/_build/latest?definitionId=66&branchName=main)
 
 PHP client for the Job Queue API ([API docs](https://app.swaggerhub.com/apis-docs/keboola/job-queue-api/1.0.0)).
 
@@ -9,18 +9,19 @@ composer require keboola/job-queue-api-php-client
 
 ```php
 use Keboola\JobQueueClient\Client;
-use Psr\Log\NullLogger;
+use Keboola\JobQueueClient\JobData;use Psr\Log\NullLogger;
 
 $client = new Client(
     new NullLogger(),
     'http://queue.conenection.keboola.com/',
     'xxx-xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 );
-$result = $client->createJob([
-    'componentId' => 'keboola.ex-db-snowflake',
-    'configId' => '123',
-    'mode' => 'run',
-]);
+$result = $client->createJob(new JobData(
+    'keboola.ex-db-snowflake',
+    '123',
+    [],
+    'run'
+));
 var_dump($result['id']);
 ```
 
@@ -34,12 +35,19 @@ var_dump($result['id']);
         SP_APP_ID=$(az ad sp show --id http://$SERVICE_PRINCIPAL_NAME --query appId --output tsv)    
     ```
 
-- Login and pull the image:
+- Login and check that you can pull the image:
 
     ```bash
         docker login keboolapes.azurecr.io --username $SP_APP_ID --password $SP_PASSWORD
         docker pull keboolapes.azurecr.io/job-queue-internal-api:latest
         docker pull keboolapes.azurecr.io/job-queue-api:latest
+    ```
+
+- Add the credentials to the k8s cluster:
+
+    ```bash
+        kubectl create secret docker-registry regcred --docker-server="https://keboolapes.azurecr.io" --docker-username="$SP_APP_ID" --docker-password="$SP_PASSWORD" --namespace dev-job-queue-api-php-client
+        kubectl patch serviceaccount default -p "{\"imagePullSecrets\":[{\"name\":\"regcred\"}]}" --namespace dev-job-queue-api-php-client
     ```
 
 - Set the following environment variables in `set-env.sh` file (use `set-env.template.sh` as sample):
