@@ -42,7 +42,7 @@ class JobData
             'configRowIds' => $this->configRowIds,
             'tag' => $this->tag,
             'branchId' => $this->branchId,
-            'configData' => $this->configData
+            'configData' => $this->configData,
         ];
     }
 }
