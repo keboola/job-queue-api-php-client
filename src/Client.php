@@ -32,6 +32,7 @@ class Client
     /** @var GuzzleClient */
     protected $guzzle;
     /** @var LoggerInterface */
+    // phpcs:ignore
     private $logger;
 
     public function __construct(
