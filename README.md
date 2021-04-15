@@ -34,12 +34,19 @@ var_dump($result['id']);
         SP_APP_ID=$(az ad sp show --id http://$SERVICE_PRINCIPAL_NAME --query appId --output tsv)    
     ```
 
-- Login and pull the image:
+- Login and check that you can pull the image:
 
     ```bash
         docker login keboolapes.azurecr.io --username $SP_APP_ID --password $SP_PASSWORD
         docker pull keboolapes.azurecr.io/job-queue-internal-api:latest
         docker pull keboolapes.azurecr.io/job-queue-api:latest
+    ```
+
+- Add the credentials to the k8s cluster:
+
+    ```bash
+        kubectl create secret docker-registry regcred --docker-server="https://keboolapes.azurecr.io" --docker-username="$SP_APP_ID" --docker-password="$SP_PASSWORD" --namespace dev-job-queue-api-php-client
+        kubectl patch serviceaccount default -p "{\"imagePullSecrets\":[{\"name\":\"regcred\"}]}" --namespace dev-job-queue-api-php-client
     ```
 
 - Set the following environment variables in `set-env.sh` file (use `set-env.template.sh` as sample):
