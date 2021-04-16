@@ -99,11 +99,7 @@ class Client
     private function initClient(string $url, string $token, array $options = []): GuzzleClient
     {
         // Initialize handlers (start with those supplied in constructor)
-        if (isset($options['handler']) && $options['handler'] instanceof HandlerStack) {
-            $handlerStack = HandlerStack::create($options['handler']);
-        } else {
-            $handlerStack = HandlerStack::create();
-        }
+        $handlerStack = HandlerStack::create($options['handler'] ?? null);
         // Set exponential backoff
         $handlerStack->push(Middleware::retry($this->createDefaultDecider($options['backoffMaxTries'])));
         // Set handler to set default headers
