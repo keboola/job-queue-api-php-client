@@ -6,13 +6,20 @@ namespace Keboola\JobQueueClient;
 
 class JobData
 {
-    private string $componentId;
-    private string $configId;
-    private array $configData;
-    private string $mode;
-    private array $configRowIds;
-    private ?string $tag;
-    private ?string $branchId;
+    /** @var string */
+    private $componentId;
+    /** @var string */
+    private $configId;
+    /** @var array */
+    private $configData;
+    /** @var string */
+    private $mode;
+    /** @var array */
+    private $configRowIds;
+    /** @var string|null */
+    private $tag;
+    /** @var string|null */
+    private $branchId;
 
     public function __construct(
         string $componentId,
