@@ -26,7 +26,8 @@ class ClientFunctionalTest extends BaseTest
         $client = $this->getClient();
         $response = $client->createJob(new JobData(
             'keboola.ex-db-snowflake',
-            '123',
+            '',
+            [],
         ));
 
         self::assertNotEmpty($response['id']);
@@ -42,6 +43,6 @@ class ClientFunctionalTest extends BaseTest
         );
         self::expectException(ClientException::class);
         self::expectExceptionMessage('Invalid access token');
-        $client->createJob(new JobData('foo', '123'));
+        $client->createJob(new JobData('foo', '', []));
     }
 }

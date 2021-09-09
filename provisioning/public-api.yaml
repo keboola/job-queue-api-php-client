@@ -114,6 +114,14 @@ spec:
                   key: databasePasswordUrlencoded
             - name: DATABASE_NAME
               value: 'api'
+            - name: DATABASE_SSL_VERIFY_ENABLED
+              value: '0'
+            - name: DATABASE_SSL_CA_PATH
+              value: ''
+            - name: DATABASE_VERSION
+              value: '8.0'
+            - name: JOB_QUEUE_INTERNAL_API_AUTH_TOKEN
+              value: 'ciToken'
           readinessProbe:
             httpGet:
               path: /health-check
@@ -181,6 +189,8 @@ spec:
               value: ''
             - name: INTERNAL_API_URL
               value: 'http://dev-job-queue-internal-api-service:92'
+            - name: INTERNAL_API_TOKEN
+              value: 'ciToken'
             - name: AZURE_KEY_VAULT_URL
               valueFrom:
                 configMapKeyRef:
