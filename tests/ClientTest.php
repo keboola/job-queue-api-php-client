@@ -315,4 +315,36 @@ class ClientTest extends BaseTest
         self::expectExceptionMessage('{"message" => "Unauthorized"}');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
+
+    public function testClientGetJobsDurationSum(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "jobs": {
+                        "durationSum": 456
+                    }
+                }'
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mock);
+        $stack->push($history);
+        $client = $this->getClient(['handler' => $stack]);
+        $durationSum = $client->getJobsDurationSum();
+        self::assertSame(456, $durationSum);
+
+        self::assertCount(1, $requestHistory);
+        /** @var Request $request */
+        $request = $requestHistory[0]['request'];
+        self::assertEquals('http://example.com/stats/project', $request->getUri()->__toString());
+        self::assertEquals('GET', $request->getMethod());
+        self::assertEquals('testToken', $request->getHeader('X-StorageApi-Token')[0]);
+        self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
+        self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
+    }
 }

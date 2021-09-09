@@ -96,6 +96,13 @@ class Client
         };
     }
 
+    public function getJobsDurationSum(): int
+    {
+        $request = new Request('GET', 'stats/project');
+        $response = $this->sendRequest($request);
+        return $response['jobs']['durationSum'];
+    }
+
     private function initClient(string $url, string $token, array $options = []): GuzzleClient
     {
         // Initialize handlers (start with those supplied in constructor)
