@@ -117,6 +117,7 @@ export test_aws_secret_access_key_base64=$(printf "%s" "$test_aws_secret_access_
 
 ./set-env.sh
 envsubst < provisioning/environments.yaml.template > provisioning/environments.yaml
+kubectl apply -f ./provisioning/environments.yaml
 kubectl apply -f ./provisioning/public-api.yaml
 queue_public_api_ip=`kubectl get svc --output jsonpath --template "{.items[?(@.metadata.name==\"dev-job-queue-api-service\")].status.loadBalancer.ingress[].ip}" --namespace=dev-job-queue-api-php-client`
 
