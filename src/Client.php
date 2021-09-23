@@ -78,6 +78,23 @@ class Client
         return $this->sendRequest($request);
     }
 
+    public function getJob(string $jobId): array
+    {
+        try {
+            $request = new Request('GET', sprintf('jobs/%s', $jobId));
+        } catch (JsonException $e) {
+            throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+        return $this->sendRequest($request);
+    }
+
+    public function getJobsDurationSum(): int
+    {
+        $request = new Request('GET', 'stats/project');
+        $response = $this->sendRequest($request);
+        return $response['jobs']['durationSum'];
+    }
+
     private function createDefaultDecider(int $maxRetries): Closure
     {
         return function (
@@ -94,13 +111,6 @@ class Client
                 return false;
             }
         };
-    }
-
-    public function getJobsDurationSum(): int
-    {
-        $request = new Request('GET', 'stats/project');
-        $response = $this->sendRequest($request);
-        return $response['jobs']['durationSum'];
     }
 
     private function initClient(string $url, string $token, array $options = []): GuzzleClient

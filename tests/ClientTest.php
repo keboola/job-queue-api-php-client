@@ -316,7 +316,7 @@ class ClientTest extends BaseTest
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
-    public function testClientGetJobsDurationSum(): void
+    public function testGetJobsDurationSum(): void
     {
         $mock = new MockHandler([
             new Response(
