@@ -96,6 +96,7 @@ var_dump($result['id']);
  
 - Deploy the key vault, provide tenant ID, service principal ID and group ID from the previous commands:
     ```bash
+    ./set-env.sh # set $test_azure_tenant_id env
     az deployment group create --resource-group testing-job-queue-api-php-client --template-file provisioning/azure.json --parameters vault_name=test-job-queue-client tenant_id=$test_azure_tenant_id service_principal_object_id=$SERVICE_PRINCIPAL_ID
     ```
   
