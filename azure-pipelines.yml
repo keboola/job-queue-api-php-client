@@ -88,6 +88,7 @@ stages:
             displayName: 'Build & Run Tests'
             env:
               test_storage_api_token: $(test_storage_api_token)
+              storage_api_url: $(storage_api_url)
               public_queue_api_url: http://$(QUEUE_PUBLIC_API_IP):94
 
   - stage: tests
@@ -109,6 +110,7 @@ stages:
             displayName: 'Build & Run Tests'
             env:
               test_storage_api_token: $(test_storage_api_token)
+              storage_api_url: $(storage_api_url)
               public_queue_api_url: http://$(QUEUE_PUBLIC_API_IP):94
 
           - task: PublishTestResults@2

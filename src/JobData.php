@@ -8,7 +8,7 @@ class JobData
 {
     /** @var string */
     private $componentId;
-    /** @var string */
+    /** @var string|null */
     private $configId;
     /** @var array */
     private $configData;
@@ -23,7 +23,7 @@ class JobData
 
     public function __construct(
         string $componentId,
-        string $configId,
+        ?string $configId = null,
         array $configData = [],
         string $mode = 'run',
         array $configRowIds = [],

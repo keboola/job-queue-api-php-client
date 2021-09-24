@@ -11,6 +11,7 @@ services:
     environment:
       public_queue_api_url:
       test_storage_api_token:
+      storage_api_url:
     command: ['composer', 'ci']
 
   tests73:
@@ -20,6 +21,7 @@ services:
     environment:
       public_queue_api_url:
       test_storage_api_token:
+      storage_api_url:
     command: ['composer', 'ci']
 
   tests-local:
