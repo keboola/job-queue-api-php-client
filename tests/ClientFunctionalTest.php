@@ -26,8 +26,25 @@ class ClientFunctionalTest extends BaseTest
         $client = $this->getClient();
         $response = $client->createJob(new JobData(
             'keboola.ex-db-snowflake',
-            '',
-            [],
+            '123',
+            []
+        ));
+
+        self::assertNotEmpty($response['id']);
+        self::assertEquals('created', $response['status']);
+    }
+
+    public function testCreateJobWithConfigData(): void
+    {
+        $client = $this->getClient();
+        $response = $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            null,
+            [
+                'parameters' => [
+                    'foo' => 'bar',
+                ],
+            ]
         ));
 
         self::assertNotEmpty($response['id']);
