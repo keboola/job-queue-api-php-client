@@ -11,6 +11,7 @@
     processIsolation="false"
     stopOnFailure="false"
     bootstrap="vendor/autoload.php"
+    cacheResultFile="/tmp/phpunit.result.cache"
 >
   <coverage processUncoveredFiles="true">
     <include>
