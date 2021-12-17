@@ -30,8 +30,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientInvalidBackoff(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "abc" is invalid: This value should be a valid number'
         );
         new Client(
@@ -44,8 +44,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientTooLowBackoff(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "-1" is invalid: This value should be between 0 and 100.'
         );
         new Client(
@@ -58,8 +58,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientTooHighBackoff(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "101" is invalid: This value should be between 0 and 100.'
         );
         new Client(
@@ -72,8 +72,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientInvalidToken(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "" is invalid: This value should not be blank.'
         );
         new Client(new NullLogger(), 'http://example.com/', '');
@@ -81,8 +81,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientInvalidUrl(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
         );
         new Client(new NullLogger(), 'invalid url', 'testToken');
@@ -90,8 +90,8 @@ class ClientTest extends BaseTest
 
     public function testCreateClientMultipleErrors(): void
     {
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage(
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
             . "\n" . 'Value "" is invalid: This value should not be blank.' . "\n"
         );
@@ -153,8 +153,8 @@ class ClientTest extends BaseTest
         $stack = HandlerStack::create($mock);
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage('Invalid job data: Type is not supported');
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Invalid job data: Type is not supported');
         $res = fopen(sys_get_temp_dir() . '/touch', 'w');
         $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
     }
@@ -311,8 +311,8 @@ class ClientTest extends BaseTest
         $stack = HandlerStack::create($mock);
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
-        self::expectException(ClientException::class);
-        self::expectExceptionMessage('{"message" => "Unauthorized"}');
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('{"message" => "Unauthorized"}');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
