@@ -46,12 +46,14 @@ class Client
         $errors->addAll(
             $validator->validate($storageToken, [new NotBlank()])
         );
-        if (!empty($options['backoffMaxTries'])) {
-            $errors->addAll($validator->validate($options['backoffMaxTries'], [new Range(['min' => 0, 'max' => 100])]));
-            $options['backoffMaxTries'] = intval($options['backoffMaxTries']);
-        } else {
+
+        if (!isset($options['backoffMaxTries']) || $options['backoffMaxTries'] === '') {
             $options['backoffMaxTries'] = self::DEFAULT_BACKOFF_RETRIES;
         }
+
+        $errors->addAll($validator->validate($options['backoffMaxTries'], [new Range(['min' => 0, 'max' => 100])]));
+        $options['backoffMaxTries'] = (int) $options['backoffMaxTries'];
+
         if (empty($options['userAgent'])) {
             $options['userAgent'] = self::DEFAULT_USER_AGENT;
         }
