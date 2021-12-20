@@ -14,6 +14,7 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use JsonException;
 use Keboola\JobQueueClient\Exception\ClientException as JobClientException;
+use Keboola\JobQueueClient\Exception\ResponseException;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -146,16 +147,36 @@ class Client
 
     private function sendRequest(Request $request): array
     {
+        $exception = null;
         try {
             $response = $this->guzzle->send($request);
-            $data = json_decode($response->getBody()->getContents(), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
-            return $data ?: [];
-        } catch (ClientException $e) {
-            throw new JobClientException($e->getMessage(), $e->getCode(), $e);
-        } catch (GuzzleException $e) {
-            throw new JobClientException($e->getMessage(), $e->getCode(), $e);
-        } catch (JsonException $e) {
-            throw new JobClientException('Unable to parse response body into JSON: ' . $e->getMessage());
+        } catch (ClientException $exception) {
+            $response = $exception->getResponse();
+        } catch (GuzzleException $exception) {
+            $response = null;
         }
+
+        $data = null;
+        if ($response !== null) {
+            try {
+                $data = json_decode($response->getBody()->getContents(), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
+            } catch (JsonException $e) {
+                throw new JobClientException(
+                    'Unable to parse response body into JSON: ' . $e->getMessage(),
+                    0,
+                    $exception
+                );
+            }
+        }
+
+        if ($exception === null) {
+            return $data ?: [];
+        }
+
+        if ($exception instanceof ClientException) {
+            throw new ResponseException($exception->getMessage(), $exception->getCode(), $data, $exception);
+        }
+
+        throw new JobClientException($exception->getMessage(), $exception->getCode(), $exception);
     }
 }

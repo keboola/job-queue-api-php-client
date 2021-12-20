@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -159,6 +160,80 @@ class ClientTest extends BaseTest
         $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
     }
 
+    public function testClientExceptionIsThrownWhenGuzzleRequestErrorOccurs(): void
+    {
+        $requestHandler = MockHandler::createWithMiddleware([
+            new Response(
+                500,
+                ['Content-Type' => 'text/plain'],
+                'Error on server'
+            ),
+        ]);
+
+        $client = $this->getClient(['handler' => $requestHandler, 'backoffMaxTries' => 0]);
+
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Error on server');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+    }
+
+    public function testClientExceptionIsThrownForResponseWithInvalidJson(): void
+    {
+        $requestHandler = MockHandler::createWithMiddleware([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{not a valid json]'
+            ),
+        ]);
+
+        $client = $this->getClient(['handler' => $requestHandler]);
+
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Unable to parse response body into JSON: ');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+    }
+
+    public function testRequestExceptionIsThrownForValidErrorResponse(): void
+    {
+        $requestHandler = MockHandler::createWithMiddleware([
+            new Response(
+                400,
+                ['Content-Type' => 'application/json'],
+                (string) json_encode([])
+            ),
+        ]);
+
+        $client = $this->getClient(['handler' => $requestHandler]);
+
+        $this->expectException(ResponseException::class);
+        $this->expectExceptionMessage('400 Bad Request');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+    }
+
+    public function testRequestExceptionIsThrownForErrorResponseWithErrorCode(): void
+    {
+        $requestHandler = MockHandler::createWithMiddleware([
+            new Response(
+                400,
+                ['Content-Type' => 'application/json'],
+                (string) json_encode([
+                    'context' => [
+                        'errorCode' => 'some.error',
+                    ],
+                ])
+            ),
+        ]);
+
+        $client = $this->getClient(['handler' => $requestHandler]);
+
+        try {
+            $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+        } catch (ResponseException $e) {
+            self::assertTrue($e->isErrorCode('some.error'));
+        }
+    }
+
     public function testLogger(): void
     {
         $mock = new MockHandler([
@@ -302,7 +377,7 @@ class ClientTest extends BaseTest
             new Response(
                 401,
                 ['Content-Type' => 'application/json'],
-                '{"message" => "Unauthorized"}'
+                '{"message": "Unauthorized"}'
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -312,7 +387,7 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('{"message" => "Unauthorized"}');
+        $this->expectExceptionMessage('{"message": "Unauthorized"}');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
