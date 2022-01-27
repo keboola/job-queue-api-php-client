@@ -62,6 +62,10 @@
     },
     "config": {
         "sort-packages": true,
-        "process-timeout": 3600
+        "process-timeout": 3600,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": true
+        }
     }
 }
