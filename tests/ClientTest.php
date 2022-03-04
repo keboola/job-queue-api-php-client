@@ -439,7 +439,7 @@ class ClientTest extends BaseTest
         $stack->push($history);
         $client = $this->getClient(['handler' => $stack]);
         $jobLineageResponse = $client->getJobLineage('123');
-        self::assertSame(self::JOB_LINEAGE_RESPONSE, $jobLineageResponse);
+        self::assertSame(json_decode(self::JOB_LINEAGE_RESPONSE, true), $jobLineageResponse);
         self::assertCount(1, $requestHistory);
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
