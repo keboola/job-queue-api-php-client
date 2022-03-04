@@ -443,7 +443,7 @@ class ClientTest extends BaseTest
         self::assertCount(1, $requestHistory);
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
-        self::assertEquals('http://example.com/jobs/123/open-api-lineage', $request->getUri()->__toString());
+        self::assertEquals('http://example.com/job/123/open-api-lineage', $request->getUri()->__toString());
         self::assertEquals('GET', $request->getMethod());
         self::assertEquals('testToken', $request->getHeader('X-StorageApi-Token')[0]);
         self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
