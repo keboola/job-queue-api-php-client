@@ -422,4 +422,120 @@ class ClientTest extends BaseTest
         self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
         self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
     }
+
+    public function testGetJobLineage(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                self::JOB_LINEAGE_RESPONSE
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mock);
+        $stack->push($history);
+        $client = $this->getClient(['handler' => $stack]);
+        $jobLineageResponse = $client->getJobLineage('123');
+        self::assertSame(self::JOB_LINEAGE_RESPONSE, $jobLineageResponse);
+        self::assertCount(1, $requestHistory);
+        /** @var Request $request */
+        $request = $requestHistory[0]['request'];
+        self::assertEquals('http://example.com/jobs/123/open-api-lineage', $request->getUri()->__toString());
+        self::assertEquals('GET', $request->getMethod());
+        self::assertEquals('testToken', $request->getHeader('X-StorageApi-Token')[0]);
+        self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
+        self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
+    }
+
+    private const JOB_LINEAGE_RESPONSE = '[
+        {
+            "eventType": "START",
+            "eventTime": "2022-03-04T12:07:00.406Z",
+            "run": {
+              "runId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "facets": {
+                "parent": {
+                  "_producer": "https://connection.north-europe.azure.keboola.com",
+                  "_schemaURL": "https://openlineage.io/spec/facets/1-0-0/ParentRunFacet.json#/$defs/ParentRunFacet",
+                  "run": {
+                    "runId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  },
+                  "job": {
+                    "namespace": "connection.north-europe.azure.keboola.com/project/1234",
+                    "name": "keboola.orchestrator-123"
+                  }
+                }
+              }
+            },
+            "job": {
+              "namespace": "connection.north-europe.azure.keboola.com/project/1234",
+              "name": "keboola.snowflake-transformation-123456"
+            },
+            "producer": "https://connection.north-europe.azure.keboola.com",
+            "inputs": [
+              {
+                "namespace": "connection.north-europe.azure.keboola.com/project/1234",
+                "name": "in.c-kds-team-ex-shoptet-permalink-1234567.orders",
+                "facets": {
+                  "schema": {
+                    "_producer": "https://connection.north-europe.azure.keboola.com",
+                    "_schemaURL": "https://openlineage.io/spec/1-0-2/OpenLineage.json#/$defs/InputDatasetFacet",
+                    "fields": [
+                      {
+                        "name": "code"
+                      },
+                      {
+                        "name": "date"
+                      },
+                      {
+                        "name": "totalPriceWithVat"
+                      },
+                      {
+                        "name": "currency"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+            },
+            {
+            "eventType": "COMPLETE",
+            "eventTime": "2022-03-04T12:07:00.406Z",
+            "run": {
+              "runId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            },
+            "job": {
+              "namespace": "connection.north-europe.azure.keboola.com/project/1234",
+              "name": "keboola.snowflake-transformation-123456"
+            },
+            "producer": "https://connection.north-europe.azure.keboola.com",
+            "outputs": [
+              {
+                "namespace": "connection.north-europe.azure.keboola.com/project/1234",
+                "name": "out.c-orders.dailyStats\"",
+                "facets": {
+                  "schema": {
+                    "_producer": "https://connection.north-europe.azure.keboola.com",
+                    "_schemaURL": "https://openlineage.io/spec/1-0-2/OpenLineage.json#/$defs/OutputDatasetFacet",
+                    "fields": [
+                      {
+                        "name": "date"
+                      },
+                      {
+                        "name": "ordersCount"
+                      },
+                      {
+                        "name": "totalPriceEuroSum"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+            }
+        ]';
 }
