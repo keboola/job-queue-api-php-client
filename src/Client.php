@@ -98,6 +98,12 @@ class Client
         return $response['jobs']['durationSum'];
     }
 
+    public function getJobLineage(string $jobId): array
+    {
+        $request = new Request('GET', sprintf('job/%s/open-api-lineage', $jobId));
+        return $this->sendRequest($request);
+    }
+
     private function createDefaultDecider(int $maxRetries): Closure
     {
         return function (
