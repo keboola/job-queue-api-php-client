@@ -12,6 +12,7 @@ jobs:
 
   - template: ../../azure-pipelines/jobs/run-tests.yml
     parameters:
+      displayName: Tests PHP 8.1
       serviceName: ci-public-api-php-client-81
       testCommand: bash -c 'wait-for-it.sh --strict --timeout=120 ci-public-api:8080 && composer ci'
       variables:
