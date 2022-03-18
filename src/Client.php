@@ -32,12 +32,8 @@ class Client
 
     /** @var GuzzleClient */
     protected $guzzle;
-    /** @var LoggerInterface */
-    // phpcs:ignore
-    private $logger;
 
     public function __construct(
-        LoggerInterface $logger,
         string $publicApiUrl,
         string $storageToken,
         array $options = []
@@ -67,7 +63,6 @@ class Client
             throw new JobClientException('Invalid parameters when creating client: ' . $messages);
         }
         $this->guzzle = $this->initClient($publicApiUrl, $storageToken, $options);
-        $this->logger = $logger;
     }
 
     public function createJob(JobData $jobData): array
@@ -165,6 +160,7 @@ class Client
         $data = null;
         if ($response !== null) {
             try {
+                /** @var array $data */
                 $data = json_decode($response->getBody()->getContents(), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
             } catch (JsonException $e) {
                 throw new JobClientException(
@@ -176,7 +172,7 @@ class Client
         }
 
         if ($exception === null) {
-            return $data ?: [];
+            return $data ?? [];
         }
 
         if ($exception instanceof ClientException) {

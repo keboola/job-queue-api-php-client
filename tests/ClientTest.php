@@ -22,7 +22,6 @@ class ClientTest extends BaseTest
     private function getClient(array $options, ?LoggerInterface $logger = null): Client
     {
         return new Client(
-            $logger ?? new NullLogger(),
             'http://example.com/',
             'testToken',
             $options
@@ -36,7 +35,6 @@ class ClientTest extends BaseTest
             'Invalid parameters when creating client: Value "abc" is invalid: This value should be a valid number'
         );
         new Client(
-            new NullLogger(),
             'http://example.com/',
             'testToken',
             ['backoffMaxTries' => 'abc']
@@ -50,7 +48,6 @@ class ClientTest extends BaseTest
             'Invalid parameters when creating client: Value "-1" is invalid: This value should be between 0 and 100.'
         );
         new Client(
-            new NullLogger(),
             'http://example.com/',
             'testToken',
             ['backoffMaxTries' => -1]
@@ -64,7 +61,6 @@ class ClientTest extends BaseTest
             'Invalid parameters when creating client: Value "101" is invalid: This value should be between 0 and 100.'
         );
         new Client(
-            new NullLogger(),
             'http://example.com/',
             'testToken',
             ['backoffMaxTries' => 101]
@@ -77,7 +73,7 @@ class ClientTest extends BaseTest
         $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "" is invalid: This value should not be blank.'
         );
-        new Client(new NullLogger(), 'http://example.com/', '');
+        new Client('http://example.com/', '');
     }
 
     public function testCreateClientInvalidUrl(): void
@@ -86,7 +82,7 @@ class ClientTest extends BaseTest
         $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
         );
-        new Client(new NullLogger(), 'invalid url', 'testToken');
+        new Client('invalid url', 'testToken');
     }
 
     public function testCreateClientMultipleErrors(): void
@@ -96,7 +92,7 @@ class ClientTest extends BaseTest
             'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
             . "\n" . 'Value "" is invalid: This value should not be blank.' . "\n"
         );
-        new Client(new NullLogger(), 'invalid url', '');
+        new Client('invalid url', '');
     }
 
     public function testClientRequestResponse(): void

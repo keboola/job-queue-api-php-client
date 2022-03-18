@@ -49,9 +49,8 @@ class ClientFunctionalTest extends BaseTest
     private function getClient(array $options = []): Client
     {
         return new Client(
-            new NullLogger(),
-            (string) getenv('public_queue_api_url'),
-            (string) getenv('test_storage_api_token'),
+            (string)getenv('public_queue_api_url'),
+            (string)getenv('test_storage_api_token'),
             $options
         );
     }
@@ -89,8 +88,7 @@ class ClientFunctionalTest extends BaseTest
     public function testCreateInvalidJob(): void
     {
         $client = new Client(
-            new NullLogger(),
-            (string) getenv('public_queue_api_url'),
+            (string)getenv('public_queue_api_url'),
             'invalid',
         );
         self::expectException(ClientException::class);
