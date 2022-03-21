@@ -160,8 +160,12 @@ class Client
         $data = null;
         if ($response !== null) {
             try {
-                /** @var array $data */
-                $data = json_decode($response->getBody()->getContents(), true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
+                $data = (array) json_decode(
+                    $response->getBody()->getContents(),
+                    true,
+                    self::JSON_DEPTH,
+                    JSON_THROW_ON_ERROR
+                );
             } catch (JsonException $e) {
                 throw new JobClientException(
                     'Unable to parse response body into JSON: ' . $e->getMessage(),
