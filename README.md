@@ -142,3 +142,7 @@ Store the result `queue_public_api_ip` in `set-env.sh`.
     docker-compose run tests-local composer install
     source ./set-env.sh && docker-compose run tests-local
     ```
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
