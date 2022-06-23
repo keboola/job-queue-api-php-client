@@ -20,6 +20,7 @@ class JobDataTest extends TestCase
                 'configRowIds' => [],
                 'tag' => null,
                 'branchId' => null,
+                'orchestrationId' => null,
                 'configData' => [],
             ],
             $jobData->getArray()
@@ -28,7 +29,17 @@ class JobDataTest extends TestCase
 
     public function testAccessorsFull(): void
     {
-        $jobData = new JobData('dummy', 'config', ['foo' => 'bar'], 'debug', ['1', '2'], '1.2.3', '123');
+        $jobData = new JobData(
+            'dummy',
+            'config',
+            ['foo' => 'bar'],
+            'debug',
+            ['1', '2'],
+            '1.2.3',
+            '123',
+            '123456'
+        );
+
         self::assertEquals(
             [
                 'component' => 'dummy',
@@ -37,6 +48,7 @@ class JobDataTest extends TestCase
                 'configRowIds' => ['1', '2'],
                 'tag' => '1.2.3',
                 'branchId' => '123',
+                'orchestrationId' => '123456',
                 'configData' => ['foo' => 'bar'],
             ],
             $jobData->getArray()

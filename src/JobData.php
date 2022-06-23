@@ -20,6 +20,8 @@ class JobData
     private $tag;
     /** @var string|null */
     private $branchId;
+    /** @var string|null */
+    private $orchestrationId;
 
     public function __construct(
         string $componentId,
@@ -28,7 +30,8 @@ class JobData
         string $mode = 'run',
         array $configRowIds = [],
         ?string $tag = null,
-        ?string $branchId = null
+        ?string $branchId = null,
+        ?string $orchestrationId = null
     ) {
 
         $this->componentId = $componentId;
@@ -38,6 +41,7 @@ class JobData
         $this->configRowIds = $configRowIds;
         $this->tag = $tag;
         $this->branchId = $branchId;
+        $this->orchestrationId = $orchestrationId;
     }
 
     public function getArray(): array
@@ -49,6 +53,7 @@ class JobData
             'configRowIds' => $this->configRowIds,
             'tag' => $this->tag,
             'branchId' => $this->branchId,
+            'orchestrationId' => $this->orchestrationId,
             'configData' => $this->configData,
         ];
     }
