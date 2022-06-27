@@ -20,7 +20,7 @@ class JobDataTest extends TestCase
                 'configRowIds' => [],
                 'tag' => null,
                 'branchId' => null,
-                'orchestrationId' => null,
+                'orchestrationJobId' => null,
                 'configData' => [],
             ],
             $jobData->getArray()
@@ -48,7 +48,7 @@ class JobDataTest extends TestCase
                 'configRowIds' => ['1', '2'],
                 'tag' => '1.2.3',
                 'branchId' => '123',
-                'orchestrationId' => '123456',
+                'orchestrationJobId' => '123456',
                 'configData' => ['foo' => 'bar'],
             ],
             $jobData->getArray()
