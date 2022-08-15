@@ -86,6 +86,16 @@ class Client
         return $this->sendRequest($request);
     }
 
+    public function listJobs(): array
+    {
+        try {
+            $request = new Request('GET', 'jobs');
+        } catch (JsonException $e) {
+            throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
+        }
+        return $this->sendRequest($request);
+    }
+
     public function getJobsDurationSum(): int
     {
         $request = new Request('GET', 'stats/project');
