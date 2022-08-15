@@ -108,4 +108,22 @@ class ClientFunctionalTest extends BaseTest
         self::assertEquals($createJobResponse['id'], $response['id']);
         self::assertEquals('created', $response['status']);
     }
+
+    public function testListJobs(): void
+    {
+        $client = $this->getClient();
+        $createdJob1 = $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            '',
+            [],
+        ));
+        $createdJob2 = $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            '',
+            [],
+        ));
+        $response = $client->listJobs();
+        self::assertNotEmpty($response);
+        self::assertEquals($createdJob1['id'], $response[1]['id']);
+    }
 }
