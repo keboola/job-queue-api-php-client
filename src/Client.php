@@ -86,10 +86,10 @@ class Client
         return $this->sendRequest($request);
     }
 
-    public function listJobs(): array
+    public function listJobs(ListJobsOptions $listOptions): array
     {
         try {
-            $request = new Request('GET', 'jobs');
+            $request = new Request('GET', 'jobs?' . implode('&', $listOptions->getQueryParameters()));
         } catch (JsonException $e) {
             throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }

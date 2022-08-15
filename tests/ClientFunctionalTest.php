@@ -7,6 +7,7 @@ namespace Keboola\JobQueueClient\Tests;
 use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobData;
+use Keboola\JobQueueClient\ListJobsOptions;
 use Keboola\StorageApi\Client as StorageClient;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\Configuration;
@@ -122,8 +123,14 @@ class ClientFunctionalTest extends BaseTest
             '',
             [],
         ));
-        $response = $client->listJobs();
+        $response = $client->listJobs(
+            (new ListJobsOptions())
+                ->setComponents([
+                    'keboola.ex-db-snowflake',
+                ])
+        );
         self::assertNotEmpty($response);
         self::assertEquals($createdJob1['id'], $response[1]['id']);
+        self::assertEquals($createdJob2['id'], $response[0]['id']);
     }
 }
