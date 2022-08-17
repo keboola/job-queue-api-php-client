@@ -110,7 +110,7 @@ class ClientFunctionalTest extends BaseTest
         self::assertEquals('created', $response['status']);
     }
 
-    public function testListJobs(): void
+    public function testListJobsByComponentId(): void
     {
         $client = $this->getClient();
         $createdJob1 = $client->createJob(new JobData(
@@ -123,6 +123,17 @@ class ClientFunctionalTest extends BaseTest
             '',
             [],
         ));
+        $client->createJob(new JobData(
+            'keboola.ex-db-mysql',
+            '',
+            [],
+        ));
+        $client->createJob(new JobData(
+            'keboola.ex-db-cooper',
+            '',
+            [],
+        ));
+
         $response = $client->listJobs(
             (new ListJobsOptions())
                 ->setComponents([
@@ -132,5 +143,7 @@ class ClientFunctionalTest extends BaseTest
         self::assertNotEmpty($response);
         self::assertEquals($createdJob1['id'], $response[1]['id']);
         self::assertEquals($createdJob2['id'], $response[0]['id']);
+        self::assertEquals($createdJob1['component'], $response[1]['component']);
+        self::assertEquals($createdJob2['component'], $response[0]['component']);
     }
 }

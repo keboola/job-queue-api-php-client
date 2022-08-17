@@ -98,7 +98,7 @@ class Client
 
     public function terminateJob(string $jobId): array
     {
-        return $this->sendRequest(new Request('DELETE', sprintf('jobs/%s', $jobId)));
+        return $this->sendRequest(new Request('POST', sprintf('jobs/%s/kill', $jobId)));
     }
 
     public function getJobsDurationSum(): int
