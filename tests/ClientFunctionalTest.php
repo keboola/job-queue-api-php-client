@@ -22,25 +22,16 @@ class ClientFunctionalTest extends BaseTest
     public static function setUpBeforeClass(): void
     {
         parent::setUpBeforeClass();
-        $client = new StorageClient([
-            'token' => (string) getenv('test_storage_api_token'),
-            'url' => (string) getenv('storage_api_url'),
-        ]);
-        $components = new Components($client);
-        $configuration = new Configuration();
-        $configuration->setComponentId(self::COMPONENT_ID);
-        $configuration->setName('scheduler-test');
-        $configuration->setConfiguration([]);
-        self::$configurationId = (string) $components->addConfiguration($configuration)['id'];
+        self::$configurationId = self::createConfiguration(
+            self::COMPONENT_ID,
+            'public-api-test'
+        )['id'];
     }
 
     public static function tearDownAfterClass(): void
     {
         if (self::$configurationId) {
-            $client = new StorageClient([
-                'token' => (string) getenv('test_storage_api_token'),
-                'url' => (string) getenv('storage_api_url'),
-            ]);
+            $client = self::getStorageClient();
             $components = new Components($client);
             $components->deleteConfiguration(self::COMPONENT_ID, self::$configurationId);
         }
@@ -54,6 +45,24 @@ class ClientFunctionalTest extends BaseTest
             (string) getenv('test_storage_api_token'),
             $options
         );
+    }
+
+    private static function getStorageClient(): StorageClient
+    {
+        return new StorageClient([
+            'token' => (string) getenv('test_storage_api_token'),
+            'url' => (string) getenv('storage_api_url'),
+        ]);
+    }
+
+    private static function createConfiguration(string $componentId, string $name): array
+    {
+        $components = new Components(self::getStorageClient());
+        $configuration = new Configuration();
+        $configuration->setComponentId($componentId);
+        $configuration->setName($name);
+        $configuration->setConfiguration([]);
+        return (array) $components->addConfiguration($configuration);
     }
 
     public function testCreateJob(): void
@@ -110,7 +119,7 @@ class ClientFunctionalTest extends BaseTest
         self::assertEquals('created', $response['status']);
     }
 
-    public function testListJobsByComponentId(): void
+    public function testListJobsByComponent(): void
     {
         $client = $this->getClient();
         $createdJob1 = $client->createJob(new JobData(
@@ -129,7 +138,7 @@ class ClientFunctionalTest extends BaseTest
             [],
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-cooper',
+            'keboola.ex-db-pgsql',
             '',
             [],
         ));
@@ -140,10 +149,51 @@ class ClientFunctionalTest extends BaseTest
                     'keboola.ex-db-snowflake',
                 ])
         );
+
         self::assertNotEmpty($response);
         self::assertEquals($createdJob1['id'], $response[1]['id']);
         self::assertEquals($createdJob2['id'], $response[0]['id']);
         self::assertEquals($createdJob1['component'], $response[1]['component']);
         self::assertEquals($createdJob2['component'], $response[0]['component']);
     }
+
+    public function testListJobsByConfig(): void
+    {
+        $config2 = $this->createConfiguration('keboola.ex-db-mysql', 'public-api-test-2');
+        $config3 = $this->createConfiguration('keboola.ex-db-mysql', 'public-api-test-2');
+
+        $client = $this->getClient();
+        $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            self::$configurationId
+        ));
+        $client->createJob(new JobData(
+            'keboola.ex-db-snowflake',
+            self::$configurationId
+        ));
+        $createdJob1 = $client->createJob(new JobData(
+            'keboola.ex-db-mysql',
+            $config2['id']
+        ));
+        $createdJob2 = $client->createJob(new JobData(
+            'keboola.ex-db-mysql',
+            $config3['id']
+        ));
+
+        $response = $client->listJobs(
+            (new ListJobsOptions())
+                ->setConfigs([
+                    $config2['id'],
+                    $config3['id']
+                ])
+        );
+
+        self::assertNotEmpty($response);
+        self::assertEquals($createdJob1['id'], $response[1]['id']);
+        self::assertEquals($createdJob2['id'], $response[0]['id']);
+        self::assertEquals($createdJob1['config'], $response[1]['config']);
+        self::assertEquals($createdJob2['config'], $response[0]['config']);
+    }
+
+
 }
