@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Keboola\JobQueueClient\Tests;
 
-use DateTime;
+use DateTimeImmutable;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\ListJobsOptions;
 use PHPUnit\Framework\TestCase;
-use Safe\DateTimeImmutable;
 
 class ListJobsOptionsTest extends TestCase
 {
@@ -29,12 +28,12 @@ class ListJobsOptionsTest extends TestCase
         $options->setStatuses([ListJobsOptions::STATUS_SUCCESS, ListJobsOptions::STATUS_PROCESSING]);
         $options->setParentRunId('123');
         $options->setType(ListJobsOptions::TYPE_STANDARD);
-        $options->setCreatedTimeFrom(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2022-02-02 1:12:23'));
-        $options->setCreatedTimeTo(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2022-02-20 1:12:23'));
-        $options->setStartTimeFrom(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2021-02-02 1:12:23'));
-        $options->setStartTimeTo(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2021-02-20 1:12:23'));
-        $options->setEndTimeFrom(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2020-02-02 1:12:23'));
-        $options->setEndTimeTo(DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2020-02-20 1:12:23'));
+        $options->setCreatedTimeFrom(new DateTimeImmutable('2022-02-02 1:12:23'));
+        $options->setCreatedTimeTo(new DateTimeImmutable('2022-02-20 1:12:23'));
+        $options->setStartTimeFrom(new DateTimeImmutable('2021-02-02 1:12:23'));
+        $options->setStartTimeTo(new DateTimeImmutable('2021-02-20 1:12:23'));
+        $options->setEndTimeFrom(new DateTimeImmutable('2020-02-02 1:12:23'));
+        $options->setEndTimeTo(new DateTimeImmutable('2020-02-20 1:12:23'));
         $options->setDurationSecondsFrom(5);
         $options->setDurationSecondsTo(7200);
         $options->setSortOrder(ListJobsOptions::SORT_ORDER_DESC);
@@ -91,12 +90,12 @@ class ListJobsOptionsTest extends TestCase
             'tokenDescription[]=old+token',
             'tokenDescription[]=bad+token',
             'tokenDescription[]=good+token',
-            'componentId[]=writer',
-            'componentId[]=extractor',
-            'componentId[]=orchestrator',
-            'configId[]=a',
-            'configId[]=b',
-            'configId[]=c',
+            'component[]=writer',
+            'component[]=extractor',
+            'component[]=orchestrator',
+            'config[]=a',
+            'config[]=b',
+            'config[]=c',
             'configRowIds[]=d',
             'configRowIds[]=e',
             'configRowIds[]=f',
