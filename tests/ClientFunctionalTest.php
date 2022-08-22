@@ -14,17 +14,12 @@ use Keboola\StorageApi\Client as StorageClient;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\Configuration;
 use Keboola\StorageApi\Options\Components\ListComponentConfigurationsOptions;
+use Throwable;
 
 class ClientFunctionalTest extends BaseTest
 {
     private const COMPONENT_ID = 'keboola.ex-db-snowflake';
     private const COMPONENT_ID_2 = 'keboola.ex-db-mysql';
-
-    public static function setUpBeforeClass(): void
-    {
-        parent::setUpBeforeClass();
-        self::deleteConfigurations();
-    }
 
     private function getClient(array $options = []): Client
     {
@@ -53,18 +48,12 @@ class ClientFunctionalTest extends BaseTest
         return (array) $components->addConfiguration($configuration);
     }
 
-    private static function deleteConfigurations(): void
+    private static function deleteConfiguration(string $componentId, string $configurationId): void
     {
         $components = new Components(self::getStorageClient());
-        foreach ([self::COMPONENT_ID, self::COMPONENT_ID_2] as $componentId) {
-            $configurations = $components->listComponentConfigurations(
-                (new ListComponentConfigurationsOptions())
-                    ->setComponentId($componentId)
-                    ->setIsDeleted(false)
-            );
-            foreach ($configurations as $configuration) {
-                $components->deleteConfiguration($componentId, $configuration['id']);
-            }
+        try {
+            $components->deleteConfiguration($componentId, $configurationId);
+        } catch (Throwable $e) {
         }
     }
 
@@ -160,23 +149,23 @@ class ClientFunctionalTest extends BaseTest
 
         $client = $this->getClient();
         $client->createJob(new JobData(
-            'keboola.ex-db-snowflake',
+            self::COMPONENT_ID,
             $configurationId
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-snowflake',
+            self::COMPONENT_ID,
             $configurationId
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-mysql',
+            self::COMPONENT_ID_2,
             $configurationId2
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-mysql',
+            self::COMPONENT_ID_2,
             $configurationId3
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-mysql',
+            'keboola.ex-db-pgsql',
             '',
             []
         ));
@@ -248,5 +237,9 @@ class ClientFunctionalTest extends BaseTest
                 $configurationId,
             ],
         ];
+
+        self::deleteConfiguration(self::COMPONENT_ID, $configurationId);
+        self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId2);
+        self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId3);
     }
 }
