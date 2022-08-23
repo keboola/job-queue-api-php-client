@@ -95,23 +95,23 @@ class ListJobsOptions
         foreach ($arrayableProps as $propName => $paramName) {
             if (!empty($this->$propName)) {
                 foreach ($this->$propName as $value) {
-                    $parameters[] = $paramName . '[]=' . urlencode((string) $value);
+                    $parameters[$paramName][] =  $value;
                 }
             }
         }
         foreach ($scalarProps as $propName => $paramName) {
             if (!empty($this->$propName)) {
-                $parameters[] = $paramName . '=' . urlencode((string) $this->$propName);
+                $parameters[$paramName] =  $this->$propName;
             }
         }
         foreach ($scalarPropsWithEmptyValueAllowed as $propName => $paramName) {
             if (isset($this->$propName)) {
-                $parameters[] = $paramName . '=' . urlencode((string) $this->$propName);
+                $parameters[$paramName] =  $this->$propName;
             }
         }
         foreach ($dateTimeProps as $propName => $paramName) {
             if (!empty($this->$propName)) {
-                $parameters[] = $paramName . '=' . urlencode((string) $this->$propName->format('c'));
+                $parameters[$paramName] = $this->$propName->format('c');
             }
         }
 

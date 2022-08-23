@@ -20,6 +20,23 @@ class ClientFunctionalTest extends BaseTest
 {
     private const COMPONENT_ID = 'keboola.ex-db-snowflake';
     private const COMPONENT_ID_2 = 'keboola.ex-db-mysql';
+    private const COMPONENT_ID_3 = 'keboola.ex-db-pgsql';
+
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+
+        $components = new Components(self::getStorageClient());
+        foreach ([self::COMPONENT_ID, self::COMPONENT_ID_2, self::COMPONENT_ID_3] as $componentId) {
+            $configurations = $components->listComponentConfigurations(
+                (new ListComponentConfigurationsOptions())
+                    ->setComponentId($componentId)
+            );
+            foreach ($configurations as $configuration) {
+                $components->deleteConfiguration($componentId, $configuration['id']);
+            }
+        }
+    }
 
     private function getClient(array $options = []): Client
     {
@@ -66,7 +83,7 @@ class ClientFunctionalTest extends BaseTest
 
         $client = $this->getClient();
         $response = $client->createJob(new JobData(
-            'keboola.ex-db-snowflake',
+            self::COMPONENT_ID,
             $configurationId,
             []
         ));
@@ -81,7 +98,7 @@ class ClientFunctionalTest extends BaseTest
     {
         $client = $this->getClient();
         $response = $client->createJob(new JobData(
-            'keboola.ex-db-snowflake',
+            self::COMPONENT_ID,
             null,
             [
                 'parameters' => [
@@ -109,7 +126,7 @@ class ClientFunctionalTest extends BaseTest
     {
         $client = $this->getClient();
         $createJobResponse = $client->createJob(new JobData(
-            'keboola.ex-db-snowflake',
+            self::COMPONENT_ID,
             '',
             [],
         ));
@@ -129,7 +146,6 @@ class ClientFunctionalTest extends BaseTest
             $listOptions->$method($values);
         }
         $response = $this->getClient()->listJobs($listOptions);
-
         self::assertNotEmpty($response);
         self::assertEquals($expectedValues, array_column($response, $expectedKey));
     }
@@ -167,7 +183,7 @@ class ClientFunctionalTest extends BaseTest
             $configurationId3
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-pgsql',
+            self::COMPONENT_ID_3,
             '',
             []
         ));
@@ -257,27 +273,23 @@ class ClientFunctionalTest extends BaseTest
                 ],
             ],
         ];
-
-        self::deleteConfiguration(self::COMPONENT_ID, $configurationId);
-        self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId2);
-        self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId3);
     }
 
     public function testListJobsLimit(): void
     {
         $client = $this->getClient();
         $client->createJob(new JobData(
-            'keboola.ex-db-pgsql',
+            self::COMPONENT_ID_3,
             '',
             []
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-pgsql',
+            self::COMPONENT_ID_3,
             '',
             []
         ));
         $client->createJob(new JobData(
-            'keboola.ex-db-pgsql',
+            self::COMPONENT_ID_3,
             '',
             []
         ));

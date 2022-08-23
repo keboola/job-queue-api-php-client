@@ -642,13 +642,13 @@ class ClientTest extends BaseTest
                 ->setComponents([
                     'keboola.test',
                 ]),
-            'url' => 'http://example.com/jobs?component%5B%5D=keboola.test&limit=100',
+            'url' => 'http://example.com/jobs?component%5B0%5D=keboola.test&limit=100',
         ];
 
         yield 'filter by config' => [
             'options' => (new ListJobsOptions())
                 ->setConfigs(['123456']),
-            'url' => 'http://example.com/jobs?config%5B%5D=123456&limit=100',
+            'url' => 'http://example.com/jobs?config%5B0%5D=123456&limit=100',
         ];
 
         yield 'filter by type' => [
@@ -660,13 +660,13 @@ class ClientTest extends BaseTest
         yield 'filter by branch' => [
             'options' => (new ListJobsOptions())
                 ->setBranchIds(['dev-branch']),
-            'url' => 'http://example.com/jobs?branchId%5B%5D=dev-branch&limit=100',
+            'url' => 'http://example.com/jobs?branchId%5B0%5D=dev-branch&limit=100',
         ];
 
         yield 'filter by token id' => [
             'options' => (new ListJobsOptions())
                 ->setTokenIds(['789']),
-            'url' => 'http://example.com/jobs?tokenId%5B%5D=789&limit=100',
+            'url' => 'http://example.com/jobs?tokenId%5B0%5D=789&limit=100',
         ];
     }
 }

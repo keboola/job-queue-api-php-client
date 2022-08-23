@@ -78,21 +78,16 @@ class Client
 
     public function getJob(string $jobId): array
     {
-        try {
-            $request = new Request('GET', sprintf('jobs/%s', $jobId));
-        } catch (JsonException $e) {
-            throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        $request = new Request('GET', sprintf('jobs/%s', $jobId));
         return $this->sendRequest($request);
     }
 
     public function listJobs(ListJobsOptions $listOptions): array
     {
-        try {
-            $request = new Request('GET', 'jobs?' . implode('&', $listOptions->getQueryParameters()));
-        } catch (JsonException $e) {
-            throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        $request = new Request(
+            'GET',
+            'jobs?' . http_build_query($listOptions->getQueryParameters())
+        );
         return $this->sendRequest($request);
     }
 
