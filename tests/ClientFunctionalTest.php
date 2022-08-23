@@ -172,7 +172,9 @@ class ClientFunctionalTest extends BaseTest
             []
         ));
 
-        $projectId = (string) $this->getStorageClient()->verifyToken()['owner']['id'];
+        $tokenRes = $this->getStorageClient()->verifyToken();
+        $projectId = $tokenRes['owner']['id'];
+        $tokenId = $tokenRes['id'];
 
         yield 'By configs' => [
             'setValues' => [
@@ -239,9 +241,53 @@ class ClientFunctionalTest extends BaseTest
                 $configurationId,
             ],
         ];
+        yield 'By token id' => [
+            'setValues' => [
+                'setConfigs' => [$configurationId],
+                'setTokenIds' => [$tokenId],
+            ],
+            'expectedKey' => 'token',
+            'expectedValue' => [
+                [
+                    'id' => $tokenId,
+                    'description' => 'tests - job-queue',
+                ],
+                [
+                    'id' => $tokenId,
+                    'description' => 'tests - job-queue',
+                ],
+            ],
+        ];
 
         self::deleteConfiguration(self::COMPONENT_ID, $configurationId);
         self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId2);
         self::deleteConfiguration(self::COMPONENT_ID_2, $configurationId3);
+    }
+
+    public function testListJobsLimit(): void
+    {
+        $client = $this->getClient();
+        $client->createJob(new JobData(
+            'keboola.ex-db-pgsql',
+            '',
+            []
+        ));
+        $client->createJob(new JobData(
+            'keboola.ex-db-pgsql',
+            '',
+            []
+        ));
+        $client->createJob(new JobData(
+            'keboola.ex-db-pgsql',
+            '',
+            []
+        ));
+
+        $listOptions = new ListJobsOptions();
+        $listOptions->setLimit(2);
+        $response = $this->getClient()->listJobs($listOptions);
+
+        self::assertNotEmpty($response);
+        self::assertCount(2, $response);
     }
 }

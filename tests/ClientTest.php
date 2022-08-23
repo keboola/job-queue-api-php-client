@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Keboola\JobQueueClient\Tests;
 
+use DateTimeImmutable;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -13,13 +14,13 @@ use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use Keboola\JobQueueClient\ListJobsOptions;
 use Psr\Log\Test\TestLogger;
+use stdClass;
 
 class ClientTest extends BaseTest
 {
-    private function getClient(array $options, ?LoggerInterface $logger = null): Client
+    private function getClient(array $options): Client
     {
         return new Client(
             'http://example.com/',
@@ -534,4 +535,138 @@ class ClientTest extends BaseTest
             ]
             }
         ]';
+
+    /** @dataProvider provideListJobsOptionsTestData */
+    public function testListJobsOptions(ListJobsOptions $jobListOptions, string $expectedRequestUri): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                (string) json_encode([
+                    [
+                        'id' => '123',
+                        'runId' => '123',
+                        'parentRunId' => '',
+                        'branchId' => 'dev-branch',
+                        'configRowIds' => [],
+                        'tag' => '1.2.3',
+                        'project' => [
+                            'id' => '456',
+                            'name' => 'Test project',
+                        ],
+                        'token' => [
+                            'id' => '789',
+                            'description' => 'my token',
+                        ],
+                        'status' => 'created',
+                        'desiredStatus' => 'processing',
+                        'mode' => 'run',
+                        'component' => 'keboola.test',
+                        'config' => '123456',
+                        'configData' => [
+                            'parameters' => [
+                                'foo' => 'bar',
+                            ],
+                        ],
+                        'createdTime' => '2022-03-01T13:17:05+10:00',
+                        'startTime' => '2022-03-01T13:17:06+10:00',
+                        'endTime' => '2022-03-01T13:18:06+10:00',
+                        'durationSeconds' => 3600,
+                        'result' => new stdClass(),
+                        'usageData' => new stdClass(),
+                        'isFinished' => false,
+                        'url' => 'http://example.com/jobs/123',
+                        'variableValuesId' => null,
+                        'variableValuesData' => [
+                            'values' => [],
+                        ],
+                        'backend' => [],
+                        'metrics' => [
+                            'backend' => [
+                                'size' => null,
+                                'containerSize' => 'small',
+                            ],
+                            'storage' => [
+                                'inputTablesBytesSum' => 0,
+                            ],
+                        ],
+                        'behavior' => [
+                            'onError' => null,
+                        ],
+                        'parallelism' => null,
+                        'type' => 'standard',
+                        'orchestrationJobId' => null,
+                    ],
+                ])
+            ),
+        ]);
+
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($mock);
+        $stack->push($history);
+
+        $client = $this->getClient(['handler' => $stack]);
+        $client->listJobs($jobListOptions);
+
+        $request = $requestHistory[0]['request'];
+        self::assertSame($expectedRequestUri, $request->getUri()->__toString());
+    }
+
+    public function provideListJobsOptionsTestData(): iterable
+    {
+        yield 'empty options' => [
+            'options' => new ListJobsOptions(),
+            'url' => 'http://example.com/jobs?limit=100',
+        ];
+
+        yield 'sort by id, asc' => [
+            'options' => (new ListJobsOptions())
+                ->setSortBy('id')
+                ->setSortOrder('asc'),
+            'url' => 'http://example.com/jobs?limit=100&sortBy=id&sortOrder=asc',
+        ];
+
+        yield 'filter date range' => [
+            'options' => (new ListJobsOptions())
+                ->setCreatedTimeFrom(new DateTimeImmutable('2022-03-01T12:17:05+10:00'))
+                ->setCreatedTimeTo(new DateTimeImmutable('2022-07-14T05:11:45-08:20')),
+            'url' => 'http://example.com/jobs?limit=100'
+                . '&createdTimeFrom=2022-03-01T12%3A17%3A05%2B10%3A00'
+                . '&createdTimeTo=2022-07-14T05%3A11%3A45-08%3A20',
+        ];
+
+        yield 'filter by components' => [
+            'options' => (new ListJobsOptions())
+                ->setComponents([
+                    'keboola.test',
+                ]),
+            'url' => 'http://example.com/jobs?component%5B%5D=keboola.test&limit=100',
+        ];
+
+        yield 'filter by config' => [
+            'options' => (new ListJobsOptions())
+                ->setConfigs(['123456']),
+            'url' => 'http://example.com/jobs?config%5B%5D=123456&limit=100',
+        ];
+
+        yield 'filter by type' => [
+            'options' => (new ListJobsOptions())
+                ->setType('standard'),
+            'url' => 'http://example.com/jobs?limit=100&type=standard',
+        ];
+
+        yield 'filter by branch' => [
+            'options' => (new ListJobsOptions())
+                ->setBranchIds(['dev-branch']),
+            'url' => 'http://example.com/jobs?branchId%5B%5D=dev-branch&limit=100',
+        ];
+
+        yield 'filter by token id' => [
+            'options' => (new ListJobsOptions())
+                ->setTokenIds(['789']),
+            'url' => 'http://example.com/jobs?tokenId%5B%5D=789&limit=100',
+        ];
+    }
 }
