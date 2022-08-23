@@ -174,7 +174,6 @@ class ClientFunctionalTest extends BaseTest
 
         $tokenRes = $this->getStorageClient()->verifyToken();
         $projectId = $tokenRes['owner']['id'];
-        $tokenId = $tokenRes['id'];
 
         yield 'By configs' => [
             'setValues' => [
@@ -244,17 +243,17 @@ class ClientFunctionalTest extends BaseTest
         yield 'By token id' => [
             'setValues' => [
                 'setConfigs' => [$configurationId],
-                'setTokenIds' => [$tokenId],
+                'setTokenIds' => [$tokenRes['id']],
             ],
             'expectedKey' => 'token',
             'expectedValue' => [
                 [
-                    'id' => $tokenId,
-                    'description' => 'tests - job-queue',
+                    'id' => $tokenRes['id'],
+                    'description' => $tokenRes['description'],
                 ],
                 [
-                    'id' => $tokenId,
-                    'description' => 'tests - job-queue',
+                    'id' => $tokenRes['id'],
+                    'description' => $tokenRes['description'],
                 ],
             ],
         ];
