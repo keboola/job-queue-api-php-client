@@ -73,6 +73,8 @@ class ClientFunctionalTest extends BaseTest
 
         self::assertNotEmpty($response['id']);
         self::assertEquals('created', $response['status']);
+
+        self::deleteConfiguration(self::COMPONENT_ID, $configurationId);
     }
 
     public function testCreateJobWithConfigData(): void
