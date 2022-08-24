@@ -301,4 +301,18 @@ class ClientFunctionalTest extends BaseTest
         self::assertNotEmpty($response);
         self::assertCount(2, $response);
     }
+
+    public function testTerminateJob(): void
+    {
+        $client = $this->getClient();
+        $job = $client->createJob(new JobData(
+            self::COMPONENT_ID,
+            '',
+            []
+        ));
+        $client->terminateJob($job['id']);
+        $terminatingJob = $client->getJob($job['id']);
+
+        self::assertEquals('terminating', $terminatingJob['desiredStatus']);
+    }
 }
