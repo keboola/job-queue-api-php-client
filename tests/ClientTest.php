@@ -621,6 +621,11 @@ class ClientTest extends BaseTest
             'url' => 'http://example.com/jobs?limit=100',
         ];
 
+        yield 'custom limit' => [
+            'options' => (new ListJobsOptions())->setLimit(50),
+            'url' => 'http://example.com/jobs?limit=50',
+        ];
+
         yield 'sort by id, asc' => [
             'options' => (new ListJobsOptions())
                 ->setSortBy('id')

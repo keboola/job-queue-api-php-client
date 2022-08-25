@@ -120,17 +120,12 @@ class ClientFunctionalTest extends BaseTest
 
     /** @dataProvider listJobsFilterProvider() */
     public function testListJobsFilter(
-        array $setValues,
-        string $expectedKey,
-        array $expectedValues
+        ListJobsOptions $listOptions,
+        array $expectedJobs
     ): void {
-        $listOptions = new ListJobsOptions();
-        foreach ($setValues as $method => $values) {
-            $listOptions->$method($values);
-        }
         $response = $this->getClient()->listJobs($listOptions);
         self::assertNotEmpty($response);
-        self::assertEquals($expectedValues, array_column($response, $expectedKey));
+        self::assertEquals(array_column($expectedJobs, 'id'), array_column($response, 'id'));
     }
 
     public function listJobsFilterProvider(): Generator
@@ -149,15 +144,15 @@ class ClientFunctionalTest extends BaseTest
         )['id'];
 
         $client = $this->getClient();
-        $client->createJob(new JobData(
+        $job1 = $client->createJob(new JobData(
             self::COMPONENT_ID,
             $configurationId
         ));
-        $client->createJob(new JobData(
+        $job2 = $client->createJob(new JobData(
             self::COMPONENT_ID,
             $configurationId
         ));
-        $client->createJob(new JobData(
+        $job3 = $client->createJob(new JobData(
             self::COMPONENT_ID_2,
             $configurationId2
         ));
@@ -175,85 +170,60 @@ class ClientFunctionalTest extends BaseTest
         $projectId = $tokenRes['owner']['id'];
 
         yield 'By configs' => [
-            'setValues' => [
-                'setConfigs' => [
-                    $configurationId,
-                    $configurationId2,
-                ],
-            ],
-            'expectedKey' => 'config',
-            'expectedValues' => [
+            'listJobOptions' => (new ListJobsOptions())->setConfigs([
+                $configurationId,
                 $configurationId2,
-                $configurationId,
-                $configurationId,
+            ]),
+            'expectedJobs' => [
+                $job3,
+                $job2,
+                $job1,
             ],
         ];
         yield 'By components' => [
-            'setValues' => [
-                'setComponents' => [self::COMPONENT_ID],
-                'setConfigs' => [$configurationId],
-            ],
-            'expectedKey' => 'component',
-            'expectedValues' => [
-                self::COMPONENT_ID,
-                self::COMPONENT_ID,
+            'listJobOptions' => (new ListJobsOptions())
+                ->setConfigs([$configurationId])
+                ->setComponents([self::COMPONENT_ID]),
+            'expectedJobs' => [
+                $job2,
+                $job1,
             ],
         ];
         yield 'By project' => [
-            'setValues' => [
-                'setConfigs' => [$configurationId],
-                'setProjects' => [$projectId],
-            ],
-            'expectedKey' => 'project',
-            'expectedValues' => [
-                [
-                    'id' => $projectId,
-                    'name' => $projectId,
-                ],
-                [
-                    'id' => $projectId,
-                    'name' => $projectId,
-                ],
+            'listJobOptions' => (new ListJobsOptions())
+                ->setConfigs([$configurationId])
+                ->setProjects([$projectId]),
+            'expectedJobs' => [
+                $job2,
+                $job1,
             ],
         ];
         yield 'By statuses' => [
-            'setValues' => [
-                'setConfigs' => [$configurationId],
-                'setStatuses' => ['created'],
-            ],
-            'expectedKey' => 'status',
-            'expectedValue' => [
-                'created',
-                'created',
+            'listJobOptions' => (new ListJobsOptions())
+                ->setConfigs([$configurationId])
+                ->setStatuses(['created']),
+            'expectedJobs' => [
+                $job2,
+                $job1,
             ],
         ];
         yield 'By startTime' => [
-            'setValues' => [
-                'setConfigs' => [$configurationId],
-                'setCreatedTimeFrom' => new DateTime('-1 hour'),
-                'setCreatedTimeTo' => new DateTime('now'),
-            ],
-            'expectedKey' => 'config',
-            'expectedValues' => [
-                $configurationId,
-                $configurationId,
+            'listJobOptions' => (new ListJobsOptions())
+                ->setConfigs([$configurationId])
+                ->setCreatedTimeFrom(new DateTime('-1 hour'))
+                ->setCreatedTimeTo(new DateTime('now')),
+            'expectedJobs' => [
+                $job2,
+                $job1,
             ],
         ];
         yield 'By token id' => [
-            'setValues' => [
-                'setConfigs' => [$configurationId],
-                'setTokenIds' => [$tokenRes['id']],
-            ],
-            'expectedKey' => 'token',
-            'expectedValue' => [
-                [
-                    'id' => $tokenRes['id'],
-                    'description' => $tokenRes['description'],
-                ],
-                [
-                    'id' => $tokenRes['id'],
-                    'description' => $tokenRes['description'],
-                ],
+            'listJobOptions' => (new ListJobsOptions())
+                ->setConfigs([$configurationId])
+                ->setTokenIds([$tokenRes['id']]),
+            'expectedJobs' => [
+                $job2,
+                $job1,
             ],
         ];
 
@@ -297,9 +267,9 @@ class ClientFunctionalTest extends BaseTest
             '',
             []
         ));
-        $client->terminateJob($job['id']);
+        $response = $client->terminateJob($job['id']);
+        self::assertEquals('terminating', $response['desiredStatus']);
         $terminatingJob = $client->getJob($job['id']);
-
         self::assertEquals('terminating', $terminatingJob['desiredStatus']);
     }
 }
