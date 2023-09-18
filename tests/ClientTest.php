@@ -25,7 +25,7 @@ class ClientTest extends BaseTest
         return new Client(
             'http://example.com/',
             'testToken',
-            $options
+            $options,
         );
     }
 
@@ -33,12 +33,12 @@ class ClientTest extends BaseTest
     {
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "abc" is invalid: This value should be a valid number'
+            'Invalid parameters when creating client: Value "abc" is invalid: This value should be a valid number',
         );
         new Client(
             'http://example.com/',
             'testToken',
-            ['backoffMaxTries' => 'abc']
+            ['backoffMaxTries' => 'abc'],
         );
     }
 
@@ -46,12 +46,12 @@ class ClientTest extends BaseTest
     {
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "-1" is invalid: This value should be between 0 and 100.'
+            'Invalid parameters when creating client: Value "-1" is invalid: This value should be between 0 and 100.',
         );
         new Client(
             'http://example.com/',
             'testToken',
-            ['backoffMaxTries' => -1]
+            ['backoffMaxTries' => -1],
         );
     }
 
@@ -59,12 +59,12 @@ class ClientTest extends BaseTest
     {
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "101" is invalid: This value should be between 0 and 100.'
+            'Invalid parameters when creating client: Value "101" is invalid: This value should be between 0 and 100.',
         );
         new Client(
             'http://example.com/',
             'testToken',
-            ['backoffMaxTries' => 101]
+            ['backoffMaxTries' => 101],
         );
     }
 
@@ -72,7 +72,7 @@ class ClientTest extends BaseTest
     {
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "" is invalid: This value should not be blank.'
+            'Invalid parameters when creating client: Value "" is invalid: This value should not be blank.',
         );
         new Client('http://example.com/', '');
     }
@@ -81,7 +81,7 @@ class ClientTest extends BaseTest
     {
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
+            'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.',
         );
         new Client('invalid url', 'testToken');
     }
@@ -91,7 +91,7 @@ class ClientTest extends BaseTest
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage(
             'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
-            . "\n" . 'Value "" is invalid: This value should not be blank.' . "\n"
+            . "\n" . 'Value "" is invalid: This value should not be blank.' . "\n",
         );
         new Client('invalid url', '');
     }
@@ -113,7 +113,7 @@ class ClientTest extends BaseTest
                     "configRow": null,
                     "tag": null,
                     "createdTime": "2021-03-04T21:59:49+00:00"
-                }'
+                }',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -142,7 +142,7 @@ class ClientTest extends BaseTest
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                'invalid json'
+                'invalid json',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -163,7 +163,7 @@ class ClientTest extends BaseTest
             new Response(
                 500,
                 ['Content-Type' => 'text/plain'],
-                'Error on server'
+                'Error on server',
             ),
         ]);
 
@@ -180,7 +180,7 @@ class ClientTest extends BaseTest
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                '{not a valid json]'
+                '{not a valid json]',
             ),
         ]);
 
@@ -197,7 +197,7 @@ class ClientTest extends BaseTest
             new Response(
                 400,
                 ['Content-Type' => 'application/json'],
-                (string) json_encode([])
+                (string) json_encode([]),
             ),
         ]);
 
@@ -218,7 +218,7 @@ class ClientTest extends BaseTest
                     'context' => [
                         'errorCode' => 'some.error',
                     ],
-                ])
+                ]),
             ),
         ]);
 
@@ -248,7 +248,7 @@ class ClientTest extends BaseTest
                     "configRow": null,
                     "tag": null,
                     "createdTime": "2021-03-04T21:59:49+00:00"
-                }'
+                }',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -272,12 +272,12 @@ class ClientTest extends BaseTest
             new Response(
                 500,
                 ['Content-Type' => 'application/json'],
-                '{"message" => "Out of order"}'
+                '{"message" => "Out of order"}',
             ),
             new Response(
                 501,
                 ['Content-Type' => 'application/json'],
-                'Out of order'
+                'Out of order',
             ),
             new Response(
                 200,
@@ -293,7 +293,7 @@ class ClientTest extends BaseTest
                     "configRow": null,
                     "tag": null,
                     "createdTime": "2021-03-04T21:59:49+00:00"
-                }'
+                }',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -323,7 +323,7 @@ class ClientTest extends BaseTest
             $responses[] = new Response(
                 500,
                 ['Content-Type' => 'application/json'],
-                '{"message" => "Out of order"}'
+                '{"message" => "Out of order"}',
             );
         }
         $mock = new MockHandler($responses);
@@ -349,7 +349,7 @@ class ClientTest extends BaseTest
             $responses[] = new Response(
                 500,
                 ['Content-Type' => 'application/json'],
-                '{"message" => "Out of order"}'
+                '{"message" => "Out of order"}',
             );
         }
         $mock = new MockHandler($responses);
@@ -374,7 +374,7 @@ class ClientTest extends BaseTest
             new Response(
                 401,
                 ['Content-Type' => 'application/json'],
-                '{"message": "Unauthorized"}'
+                '{"message": "Unauthorized"}',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -398,7 +398,7 @@ class ClientTest extends BaseTest
                     "jobs": {
                         "durationSum": 456
                     }
-                }'
+                }',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -426,7 +426,7 @@ class ClientTest extends BaseTest
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                self::JOB_LINEAGE_RESPONSE
+                self::JOB_LINEAGE_RESPONSE,
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -598,7 +598,7 @@ class ClientTest extends BaseTest
                         'type' => 'standard',
                         'orchestrationJobId' => null,
                     ],
-                ])
+                ]),
             ),
         ]);
 

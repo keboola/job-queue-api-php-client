@@ -26,7 +26,7 @@ class ClientFunctionalTest extends BaseTest
         return new Client(
             (string) getenv('public_queue_api_url'),
             (string) getenv('test_storage_api_token'),
-            $options
+            $options,
         );
     }
 
@@ -61,14 +61,14 @@ class ClientFunctionalTest extends BaseTest
     {
         $configurationId = self::createConfiguration(
             self::COMPONENT_ID,
-            'public-api-test'
+            'public-api-test',
         )['id'];
 
         $client = $this->getClient();
         $response = $client->createJob(new JobData(
             self::COMPONENT_ID,
             $configurationId,
-            []
+            [],
         ));
 
         self::assertNotEmpty($response['id']);
@@ -87,7 +87,7 @@ class ClientFunctionalTest extends BaseTest
                 'parameters' => [
                     'foo' => 'bar',
                 ],
-            ]
+            ],
         ));
 
         self::assertNotEmpty($response['id']);
@@ -121,7 +121,7 @@ class ClientFunctionalTest extends BaseTest
     /** @dataProvider listJobsFilterProvider() */
     public function testListJobsFilter(
         ListJobsOptions $listOptions,
-        array $expectedJobs
+        array $expectedJobs,
     ): void {
         $response = $this->getClient()->listJobs($listOptions);
         self::assertNotEmpty($response);
@@ -132,38 +132,38 @@ class ClientFunctionalTest extends BaseTest
     {
         $configurationId = self::createConfiguration(
             self::COMPONENT_ID,
-            'public-api-test'
+            'public-api-test',
         )['id'];
         $configurationId2 = self::createConfiguration(
             self::COMPONENT_ID_2,
-            'public-api-test-2'
+            'public-api-test-2',
         )['id'];
         $configurationId3 = self::createConfiguration(
             self::COMPONENT_ID_2,
-            'public-api-test-3'
+            'public-api-test-3',
         )['id'];
 
         $client = $this->getClient();
         $job1 = $client->createJob(new JobData(
             self::COMPONENT_ID,
-            $configurationId
+            $configurationId,
         ));
         $job2 = $client->createJob(new JobData(
             self::COMPONENT_ID,
-            $configurationId
+            $configurationId,
         ));
         $job3 = $client->createJob(new JobData(
             self::COMPONENT_ID_2,
-            $configurationId2
+            $configurationId2,
         ));
         $client->createJob(new JobData(
             self::COMPONENT_ID_2,
-            $configurationId3
+            $configurationId3,
         ));
         $client->createJob(new JobData(
             self::COMPONENT_ID_3,
             '',
-            []
+            [],
         ));
 
         $tokenRes = $this->getStorageClient()->verifyToken();
@@ -238,17 +238,17 @@ class ClientFunctionalTest extends BaseTest
         $client->createJob(new JobData(
             self::COMPONENT_ID_3,
             '',
-            []
+            [],
         ));
         $client->createJob(new JobData(
             self::COMPONENT_ID_3,
             '',
-            []
+            [],
         ));
         $client->createJob(new JobData(
             self::COMPONENT_ID_3,
             '',
-            []
+            [],
         ));
 
         $listOptions = new ListJobsOptions();
@@ -265,7 +265,7 @@ class ClientFunctionalTest extends BaseTest
         $job = $client->createJob(new JobData(
             self::COMPONENT_ID,
             '',
-            []
+            [],
         ));
         $response = $client->terminateJob($job['id']);
         self::assertEquals('terminating', $response['desiredStatus']);

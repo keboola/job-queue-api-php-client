@@ -36,12 +36,12 @@ class Client
     public function __construct(
         string $publicApiUrl,
         string $storageToken,
-        array $options = []
+        array $options = [],
     ) {
         $validator = Validation::createValidator();
         $errors = $validator->validate($publicApiUrl, [new Url()]);
         $errors->addAll(
-            $validator->validate($storageToken, [new NotBlank()])
+            $validator->validate($storageToken, [new NotBlank()]),
         );
 
         if (!isset($options['backoffMaxTries']) || $options['backoffMaxTries'] === '') {
@@ -86,7 +86,7 @@ class Client
     {
         $request = new Request(
             'GET',
-            'jobs?' . http_build_query($listOptions->getQueryParameters())
+            'jobs?' . http_build_query($listOptions->getQueryParameters()),
         );
         return $this->sendRequest($request);
     }
@@ -115,7 +115,7 @@ class Client
             $retries,
             RequestInterface $request,
             ?ResponseInterface $response = null,
-            $error = null
+            $error = null,
         ) use ($maxRetries) {
             if ($retries >= $maxRetries) {
                 return false;
@@ -140,7 +140,7 @@ class Client
                     ->withHeader('User-Agent', $options['userAgent'])
                     ->withHeader('X-StorageApi-Token', $token)
                     ->withHeader('Content-type', 'application/json');
-            }
+            },
         ));
         // Set client logger
         if (isset($options['logger']) && $options['logger'] instanceof LoggerInterface) {
@@ -148,8 +148,8 @@ class Client
                 $options['logger'],
                 new MessageFormatter(
                     '{hostname} {req_header_User-Agent} - [{ts}] "{method} {resource} {protocol}/{version}"' .
-                    ' {code} {res_header_Content-Length}'
-                )
+                    ' {code} {res_header_Content-Length}',
+                ),
             ));
         }
         // finally create the instance
@@ -179,13 +179,13 @@ class Client
                     $response->getBody()->getContents(),
                     true,
                     self::JSON_DEPTH,
-                    JSON_THROW_ON_ERROR
+                    JSON_THROW_ON_ERROR,
                 );
             } catch (JsonException $e) {
                 throw new JobClientException(
                     'Unable to parse response body into JSON: ' . $e->getMessage(),
                     0,
-                    $exception
+                    $exception,
                 );
             }
         }

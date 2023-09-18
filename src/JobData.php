@@ -31,7 +31,7 @@ class JobData
         array $configRowIds = [],
         ?string $tag = null,
         ?string $branchId = null,
-        ?string $orchestrationJobId = null
+        ?string $orchestrationJobId = null,
     ) {
 
         $this->componentId = $componentId;

@@ -14,7 +14,7 @@ class ResponseException extends ClientException
         string $message,
         int $code,
         ?array $responseData,
-        ?Throwable $previous = null
+        ?Throwable $previous = null,
     ) {
         parent::__construct($message, $code, $previous);
         $this->responseData = $responseData;
