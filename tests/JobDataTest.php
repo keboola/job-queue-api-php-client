@@ -23,7 +23,7 @@ class JobDataTest extends TestCase
                 'orchestrationJobId' => null,
                 'configData' => [],
             ],
-            $jobData->getArray()
+            $jobData->getArray(),
         );
     }
 
@@ -37,7 +37,7 @@ class JobDataTest extends TestCase
             ['1', '2'],
             '1.2.3',
             '123',
-            '123456'
+            '123456',
         );
 
         self::assertEquals(
@@ -51,7 +51,7 @@ class JobDataTest extends TestCase
                 'orchestrationJobId' => '123456',
                 'configData' => ['foo' => 'bar'],
             ],
-            $jobData->getArray()
+            $jobData->getArray(),
         );
     }
 }
