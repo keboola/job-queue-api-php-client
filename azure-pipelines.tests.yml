@@ -11,3 +11,5 @@ jobs:
         AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
         AZURE_CLIENT_SECRET: $(AZURE_CLIENT_SECRET)
         LOG_ABS_CONNECTION_STRING: $(LOG_ABS_CONNECTION_STRING)
+        # This needs to be passed along although the pubic API client doesn't need it, but the public-api container started as part of the tests needs it
+        GOOGLE_APPLICATION_CREDENTIALS_JSON: $(GOOGLE_APPLICATION_CREDENTIALS_JSON)
