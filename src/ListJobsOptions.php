@@ -33,7 +33,7 @@ class ListJobsOptions
     private string $sortBy;
     private string $sortOrder;
     private ?string $parentRunId = null;
-    private string $type;
+    private JobType $type;
 
     /** @var string */
     public const SORT_ORDER_ASC = 'asc';
@@ -50,11 +50,6 @@ class ListJobsOptions
     public const STATUS_TERMINATING = 'terminating';
     public const STATUS_WAITING = 'waiting';
     public const STATUS_WARNING = 'warning';
-
-    public const TYPE_STANDARD = 'standard';
-    public const TYPE_ROW_CONTAINER = 'container';
-    public const TYPE_PHASE_CONTAINER = 'phaseContainer';
-    public const TYPE_ORCHESTRATION_CONTAINER = 'orchestrationContainer';
 
     public function getQueryParameters(): array
     {
@@ -78,6 +73,8 @@ class ListJobsOptions
             'limit' => 'limit',
             'sortBy' => 'sortBy',
             'sortOrder' => 'sortOrder',
+        ];
+        $enumProps = [
             'type' => 'type',
         ];
         $scalarPropsWithEmptyValueAllowed = [
@@ -102,6 +99,11 @@ class ListJobsOptions
         foreach ($scalarProps as $propName => $paramName) {
             if (!empty($this->$propName)) {
                 $parameters[$paramName] =  $this->$propName;
+            }
+        }
+        foreach ($enumProps as $propName => $paramName) {
+            if (!empty($this->$propName)) {
+                $parameters[$paramName] =  $this->$propName->value;
             }
         }
         foreach ($scalarPropsWithEmptyValueAllowed as $propName => $paramName) {
@@ -388,12 +390,12 @@ class ListJobsOptions
         return $this;
     }
 
-    public function getType(): string
+    public function getType(): JobType
     {
         return $this->type;
     }
 
-    public function setType(string $type): self
+    public function setType(JobType $type): self
     {
         $this->type = $type;
         return $this;

@@ -6,6 +6,7 @@ namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
 use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +28,7 @@ class ListJobsOptionsTest extends TestCase
         $options->setModes(['run', 'debug']);
         $options->setStatuses([ListJobsOptions::STATUS_SUCCESS, ListJobsOptions::STATUS_PROCESSING]);
         $options->setParentRunId('123');
-        $options->setType(ListJobsOptions::TYPE_STANDARD);
+        $options->setType(JobType::STANDARD);
         $options->setCreatedTimeFrom(new DateTimeImmutable('2022-02-02 1:12:23'));
         $options->setCreatedTimeTo(new DateTimeImmutable('2022-02-20 1:12:23'));
         $options->setStartTimeFrom(new DateTimeImmutable('2021-02-02 1:12:23'));
@@ -59,7 +60,7 @@ class ListJobsOptionsTest extends TestCase
             $options->getStatuses(),
         );
         self::assertSame('123', $options->getParentRunId());
-        self::assertSame(ListJobsOptions::TYPE_STANDARD, $options->getType());
+        self::assertSame(JobType::STANDARD, $options->getType());
         self::assertSame('2022-02-02 01:12:23', $options->getCreatedTimeFrom()->format('Y-m-d H:i:s'));
         self::assertSame('2022-02-20 01:12:23', $options->getCreatedTimeTo()->format('Y-m-d H:i:s'));
         self::assertSame('2021-02-02 01:12:23', $options->getStartTimeFrom()->format('Y-m-d H:i:s'));
