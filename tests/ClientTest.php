@@ -14,6 +14,7 @@ use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
+use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
 use Psr\Log\Test\TestLogger;
 use stdClass;
@@ -658,7 +659,7 @@ class ClientTest extends BaseTest
 
         yield 'filter by type' => [
             'options' => (new ListJobsOptions())
-                ->setType('standard'),
+                ->setType(JobType::STANDARD),
             'url' => 'http://example.com/jobs?limit=100&type=standard',
         ];
 
