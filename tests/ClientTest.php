@@ -308,7 +308,7 @@ class ClientTest extends TestCase
         $history = Middleware::history($requestHistory);
         $stack = HandlerStack::create($history($mock));
 
-        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 3]);
+        $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         self::assertEquals('683194249', $job['id']);
         self::assertEquals('683194249', $job['runId']);
