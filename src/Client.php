@@ -149,8 +149,6 @@ class Client
     private function initClient(string $url, string $token, array $options = []): GuzzleClient
     {
         // Initialize handlers (start with those supplied in constructor)
-        $handlerStack = HandlerStack::create($options['handler'] ?? null);
-        // Initialize handlers (start with those supplied in constructor)
         $handlerStack = $options['handler'] ?? HandlerStack::create();
 
         // Set exponential backoff
