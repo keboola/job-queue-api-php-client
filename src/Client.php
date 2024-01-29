@@ -7,7 +7,9 @@ namespace Keboola\JobQueueClient;
 use Closure;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\MessageFormatter;
 use GuzzleHttp\Middleware;
@@ -23,6 +25,7 @@ use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\Validation;
+use Throwable;
 
 class Client
 {
@@ -33,6 +36,14 @@ class Client
     /** @var GuzzleClient */
     protected $guzzle;
 
+    /**
+     * @param array{
+     *     backoffMaxTries?: int,
+     *     userAgent?: string,
+     *     handler?: HandlerStack,
+     *     logger?: LoggerInterface,
+     * } $options
+     */
     public function __construct(
         string $publicApiUrl,
         string $storageToken,
@@ -44,6 +55,7 @@ class Client
             $validator->validate($storageToken, [new NotBlank()]),
         );
 
+        // @phpstan-ignore-next-line
         if (!isset($options['backoffMaxTries']) || $options['backoffMaxTries'] === '') {
             $options['backoffMaxTries'] = self::DEFAULT_BACKOFF_RETRIES;
         }
@@ -112,14 +124,21 @@ class Client
     private function createDefaultDecider(int $maxRetries): Closure
     {
         return function (
-            $retries,
+            int $retries,
             RequestInterface $request,
             ?ResponseInterface $response = null,
-            $error = null,
+            ?Throwable $error = null,
         ) use ($maxRetries) {
             if ($retries >= $maxRetries) {
                 return false;
+            } elseif ($response && $response->getStatusCode() >= 500) {
+                return true;
             } elseif ($error && $error->getCode() >= 500) {
+                return true;
+            } elseif ($error &&
+                (is_a($error, RequestException::class) || is_a($error, ConnectException::class)) &&
+                in_array($error->getHandlerContext()['errno'] ?? 0, [CURLE_RECV_ERROR, CURLE_SEND_ERROR])
+            ) {
                 return true;
             } else {
                 return false;
@@ -131,6 +150,9 @@ class Client
     {
         // Initialize handlers (start with those supplied in constructor)
         $handlerStack = HandlerStack::create($options['handler'] ?? null);
+        // Initialize handlers (start with those supplied in constructor)
+        $handlerStack = $options['handler'] ?? HandlerStack::create();
+
         // Set exponential backoff
         $handlerStack->push(Middleware::retry($this->createDefaultDecider($options['backoffMaxTries'])));
         // Set handler to set default headers
