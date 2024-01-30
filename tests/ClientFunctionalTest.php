@@ -13,9 +13,10 @@ use Keboola\JobQueueClient\ListJobsOptions;
 use Keboola\StorageApi\Client as StorageClient;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\Configuration;
+use PHPUnit\Framework\TestCase;
 use Throwable;
 
-class ClientFunctionalTest extends BaseTest
+class ClientFunctionalTest extends TestCase
 {
     private const COMPONENT_ID = 'keboola.ex-db-snowflake';
     private const COMPONENT_ID_2 = 'keboola.ex-db-mysql';

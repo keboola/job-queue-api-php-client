@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -16,10 +17,13 @@ use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
-use Psr\Log\Test\TestLogger;
+use Monolog\Handler\TestHandler;
+use Monolog\Logger;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
 use stdClass;
 
-class ClientTest extends BaseTest
+class ClientTest extends TestCase
 {
     private function getClient(array $options): Client
     {
@@ -39,6 +43,7 @@ class ClientTest extends BaseTest
         new Client(
             'http://example.com/',
             'testToken',
+            // @phpstan-ignore-next-line
             ['backoffMaxTries' => 'abc'],
         );
     }
@@ -120,8 +125,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         self::assertEquals('683194249', $job['id']);
@@ -149,8 +154,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage('Invalid job data: Type is not supported');
@@ -255,16 +260,17 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
-        $logger = new TestLogger();
+        $stack = HandlerStack::create($history($mock));
+
+        $handler = new TestHandler();
+        $logger = new Logger('testLogger', [$handler]);
         $client = $this->getClient(['handler' => $stack, 'logger' => $logger, 'userAgent' => 'test agent']);
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
         self::assertEquals('test agent', $request->getHeader('User-Agent')[0]);
-        self::assertTrue($logger->hasInfoThatContains('"POST  /1.1" 200 '));
-        self::assertTrue($logger->hasInfoThatContains('test agent'));
+        self::assertTrue($handler->hasInfoThatContains('"POST  /1.1" 200 '));
+        self::assertTrue($handler->hasInfoThatContains('test agent'));
     }
 
     public function testRetrySuccess(): void
@@ -300,8 +306,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         self::assertEquals('683194249', $job['id']);
@@ -331,16 +337,16 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
-        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 1]);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Must throw exception');
         } catch (ClientException $e) {
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
         }
-        self::assertCount(2, $requestHistory);
+        self::assertCount(4, $requestHistory);
     }
 
     public function testRetryFailureReducedBackoff(): void
@@ -357,8 +363,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 3]);
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
@@ -381,8 +387,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage('{"message": "Unauthorized"}');
@@ -405,8 +411,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $durationSum = $client->getJobsDurationSum();
         self::assertSame(456, $durationSum);
@@ -433,8 +439,8 @@ class ClientTest extends BaseTest
         // Add the history middleware to the handler stack.
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
+
         $client = $this->getClient(['handler' => $stack]);
         $jobLineageResponse = $client->getJobLineage('123');
         self::assertSame(json_decode(self::JOB_LINEAGE_RESPONSE, true), $jobLineageResponse);
@@ -605,8 +611,7 @@ class ClientTest extends BaseTest
 
         $requestHistory = [];
         $history = Middleware::history($requestHistory);
-        $stack = HandlerStack::create($mock);
-        $stack->push($history);
+        $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
         $client->listJobs($jobListOptions);
@@ -674,5 +679,118 @@ class ClientTest extends BaseTest
                 ->setTokenIds(['789']),
             'url' => 'http://example.com/jobs?tokenId%5B0%5D=789&limit=100',
         ];
+    }
+
+    public function testRetryCurlExceptionFail(): void
+    {
+        $mock = new MockHandler(
+            [
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+            ],
+            function (ResponseInterface $a) {
+                // abusing the mockhandler here: override the mock response and throw a Request exception
+                throw new RequestException(
+                    'API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer, errno 104',
+                    new Request('GET', 'https://example.com'),
+                    null,
+                    null,
+                    [
+                        'errno' => 56,
+                        'error' => 'OpenSSL SSL_read: Connection reset by peer, errno 104',
+                    ],
+                );
+            },
+        );
+
+        // Add the history middleware to the handler stack.
+        $container = [];
+        $history = Middleware::history($container);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer');
+        $client->createJob(new JobData('dummy'));
+    }
+
+    public function testRetryCurlException(): void
+    {
+        $mock = new MockHandler(
+            [
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+                new Response(
+                    200,
+                    ['Content-Type' => 'application/json'],
+                    '{
+                        "id": "683194249",
+                        "runId": "683194249",
+                        "status": "created",
+                        "desiredStatus": "processing",
+                        "mode": "run",
+                        "component": "keboola.ex-db-snowflake",
+                        "config": "123",
+                        "configRow": null,
+                        "tag": null,
+                        "createdTime": "2021-03-04T21:59:49+00:00"
+                    }',
+                ),
+            ],
+            function (ResponseInterface $a) {
+                if ($a->getStatusCode() === 500) {
+                    // abusing the mockhandler here: override the mock response and throw a Request exception
+                    throw new RequestException(
+                        'API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer, errno 104',
+                        new Request('GET', 'https://example.com'),
+                        null,
+                        null,
+                        [
+                            'errno' => 56,
+                            'error' => 'OpenSSL SSL_read: Connection reset by peer, errno 104',
+                        ],
+                    );
+                }
+            },
+        );
+
+        // Add the history middleware to the handler stack.
+        $container = [];
+        $history = Middleware::history($container);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
+        $result = $client->createJob(new JobData('dummy'));
+        self::assertSame('683194249', $result['id']);
+    }
+
+    public function testRetryCurlExceptionWithoutContext(): void
+    {
+        $mock = new MockHandler(
+            [
+                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
+            ],
+            function (ResponseInterface $a) {
+                // abusing the mockhandler here: override the mock response and throw a Request exception
+                throw new RequestException(
+                    'API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer, errno 104',
+                    new Request('GET', 'https://example.com'),
+                    null,
+                    null,
+                    [],
+                );
+            },
+        );
+
+        // Add the history middleware to the handler stack.
+        $container = [];
+        $history = Middleware::history($container);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer');
+        $client->createJob(new JobData('dummy'));
     }
 }
