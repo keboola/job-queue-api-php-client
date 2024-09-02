@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
+use Generator;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -792,5 +793,90 @@ class ClientTest extends TestCase
         $this->expectException(ClientException::class);
         $this->expectExceptionMessage('API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer');
         $client->createJob(new JobData('dummy'));
+    }
+
+    /**
+     * @dataProvider provideWaitForCompletionTestData
+     */
+    public function testWaitForCompletion(string $finalState): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                201,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "id": "683194249",
+                    "runId": "683194249",
+                    "status": "created",
+                    "desiredStatus": "processing",
+                    "mode": "run",
+                    "component": "keboola.ex-db-snowflake",
+                    "config": "123",
+                    "configRow": null,
+                    "tag": null,
+                    "createdTime": "2021-03-04T21:59:49+00:00"
+                }',
+            ),
+            new Response(
+                201,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "id": "683194249",
+                    "runId": "683194249",
+                    "status": "processing",
+                    "desiredStatus": "processing",
+                    "mode": "run",
+                    "component": "keboola.ex-db-snowflake",
+                    "config": "123",
+                    "configRow": null,
+                    "tag": null,
+                    "createdTime": "2021-03-04T21:59:49+00:00"
+                }',
+            ),
+            new Response(
+                201,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "id": "683194249",
+                    "runId": "683194249",
+                    "status": "' . $finalState . '",
+                    "desiredStatus": "processing",
+                    "mode": "run",
+                    "component": "keboola.ex-db-snowflake",
+                    "config": "123",
+                    "configRow": null,
+                    "tag": null,
+                    "createdTime": "2021-03-04T21:59:49+00:00"
+                }',
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+        $job = $client->waitForJobCompletion($job['id']);
+
+        self::assertSame('683194249', $job['id']);
+        self::assertSame('683194249', $job['runId']);
+        self::assertSame($finalState, $job['status']);
+        self::assertCount(3, $requestHistory);
+        /** @var Request $request */
+        $request = $requestHistory[0]['request'];
+        self::assertSame('http://example.com/jobs', $request->getUri()->__toString());
+        self::assertSame('POST', $request->getMethod());
+        self::assertSame('testToken', $request->getHeader('X-StorageApi-Token')[0]);
+        self::assertSame('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
+        self::assertSame('application/json', $request->getHeader('Content-type')[0]);
+    }
+
+    public function provideWaitForCompletionTestData(): Generator
+    {
+        yield ['finalState' => ListJobsOptions::STATUS_SUCCESS];
+        yield ['finalState' => ListJobsOptions::STATUS_ERROR];
+        yield ['finalState' => ListJobsOptions::STATUS_TERMINATED];
+        yield ['finalState' => ListJobsOptions::STATUS_CANCELLED];
     }
 }

@@ -220,4 +220,27 @@ class Client
 
         throw new JobClientException($exception->getMessage(), $exception->getCode(), $exception);
     }
+
+    public function waitForJobCompletion(string $jobId): array
+    {
+        $jobFinishedStatuses = [
+            ListJobsOptions::STATUS_CANCELLED,
+            ListJobsOptions::STATUS_SUCCESS,
+            ListJobsOptions::STATUS_ERROR,
+            ListJobsOptions::STATUS_TERMINATED,
+        ];
+        $maxDelay = 10; // seconds
+
+        $finished = false;
+        $attempt = 0;
+        do {
+            $job = $this->getJob($jobId);
+            if (in_array($job['status'], $jobFinishedStatuses, true)) {
+                $finished = true;
+            }
+            $attempt++;
+            sleep(min(pow(2, $attempt), $maxDelay));
+        } while (!$finished);
+        return $job;
+    }
 }
