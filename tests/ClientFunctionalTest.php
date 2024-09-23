@@ -7,6 +7,7 @@ namespace Keboola\JobQueueClient\Tests;
 use DateTime;
 use Generator;
 use Keboola\JobQueueClient\Client;
+use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -66,14 +67,14 @@ class ClientFunctionalTest extends TestCase
         )['id'];
 
         $client = $this->getClient();
-        $response = $client->createJob(new JobData(
+        $createdJob = $client->createJob(new JobData(
             self::COMPONENT_ID,
             $configurationId,
             [],
         ));
 
-        self::assertNotEmpty($response['id']);
-        self::assertEquals('created', $response['status']);
+        self::assertNotEmpty($createdJob->id);
+        self::assertEquals('created', $createdJob->status);
 
         self::deleteConfiguration(self::COMPONENT_ID, $configurationId);
     }
@@ -81,7 +82,7 @@ class ClientFunctionalTest extends TestCase
     public function testCreateJobWithConfigData(): void
     {
         $client = $this->getClient();
-        $response = $client->createJob(new JobData(
+        $createdJob = $client->createJob(new JobData(
             self::COMPONENT_ID,
             null,
             [
@@ -91,8 +92,8 @@ class ClientFunctionalTest extends TestCase
             ],
         ));
 
-        self::assertNotEmpty($response['id']);
-        self::assertEquals('created', $response['status']);
+        self::assertNotEmpty($createdJob->id);
+        self::assertEquals('created', $createdJob->status);
     }
 
     public function testCreateInvalidJob(): void
@@ -109,14 +110,14 @@ class ClientFunctionalTest extends TestCase
     public function testGetJob(): void
     {
         $client = $this->getClient();
-        $createJobResponse = $client->createJob(new JobData(
+        $createdJob = $client->createJob(new JobData(
             self::COMPONENT_ID,
             '',
             [],
         ));
-        $response = $client->getJob($createJobResponse['id']);
-        self::assertEquals($createJobResponse['id'], $response['id']);
-        self::assertEquals('created', $response['status']);
+        $retrievedJob = $client->getJob($createdJob->id);
+        self::assertEquals($createdJob->id, $retrievedJob->id);
+        self::assertEquals('created', $retrievedJob->status);
     }
 
     /** @dataProvider listJobsFilterProvider() */
@@ -126,7 +127,10 @@ class ClientFunctionalTest extends TestCase
     ): void {
         $response = $this->getClient()->listJobs($listOptions);
         self::assertNotEmpty($response);
-        self::assertEquals(array_column($expectedJobs, 'id'), array_column($response, 'id'));
+        self::assertEquals(
+            array_map(fn(Job $job) => $job->id, $expectedJobs),
+            array_map(fn(Job $job) => $job->id, $response),
+        );
     }
 
     public function listJobsFilterProvider(): Generator
@@ -268,9 +272,9 @@ class ClientFunctionalTest extends TestCase
             '',
             [],
         ));
-        $response = $client->terminateJob($job['id']);
-        self::assertEquals('terminating', $response['desiredStatus']);
-        $terminatingJob = $client->getJob($job['id']);
-        self::assertEquals('terminating', $terminatingJob['desiredStatus']);
+        $terminatedJob = $client->terminateJob($job->id);
+        self::assertEquals('terminating', $terminatedJob->desiredStatus);
+        $terminatingJob = $client->getJob($job->id);
+        self::assertEquals('terminating', $terminatingJob->desiredStatus);
     }
 }

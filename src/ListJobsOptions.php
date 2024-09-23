@@ -41,16 +41,6 @@ class ListJobsOptions
     /** @var string */
     public const SORT_ORDER_DESC = 'desc';
 
-    public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_CREATED = 'created';
-    public const STATUS_ERROR = 'error';
-    public const STATUS_PROCESSING = 'processing';
-    public const STATUS_SUCCESS = 'success';
-    public const STATUS_TERMINATED = 'terminated';
-    public const STATUS_TERMINATING = 'terminating';
-    public const STATUS_WAITING = 'waiting';
-    public const STATUS_WARNING = 'warning';
-
     public function getQueryParameters(): array
     {
         $arrayableProps = [

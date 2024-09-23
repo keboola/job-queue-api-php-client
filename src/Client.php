@@ -15,6 +15,7 @@ use GuzzleHttp\MessageFormatter;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use JsonException;
+use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\ClientException as JobClientException;
 use Keboola\JobQueueClient\Exception\ResponseException;
 use Psr\Http\Message\RequestInterface;
@@ -77,7 +78,7 @@ class Client
         $this->guzzle = $this->initClient($publicApiUrl, $storageToken, $options);
     }
 
-    public function createJob(JobData $jobData): array
+    public function createJob(JobData $jobData): Job
     {
         try {
             $jobDataJson = json_encode($jobData->getArray(), JSON_THROW_ON_ERROR);
@@ -85,13 +86,15 @@ class Client
         } catch (JsonException $e) {
             throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
-        return $this->sendRequest($request);
+        $result = $this->sendRequest($request);
+        return Job::fromApiResponse($result);
     }
 
-    public function getJob(string $jobId): array
+    public function getJob(string $jobId): Job
     {
         $request = new Request('GET', sprintf('jobs/%s', $jobId));
-        return $this->sendRequest($request);
+        $result = $this->sendRequest($request);
+        return Job::fromApiResponse($result);
     }
 
     public function listJobs(ListJobsOptions $listOptions): array
@@ -100,12 +103,14 @@ class Client
             'GET',
             'jobs?' . http_build_query($listOptions->getQueryParameters()),
         );
-        return $this->sendRequest($request);
+        $result = $this->sendRequest($request);
+        return $this->mapJobsFromResponse($result);
     }
 
-    public function terminateJob(string $jobId): array
+    public function terminateJob(string $jobId): Job
     {
-        return $this->sendRequest(new Request('POST', sprintf('jobs/%s/kill', $jobId)));
+        $result = $this->sendRequest(new Request('POST', sprintf('jobs/%s/kill', $jobId)));
+        return Job::fromApiResponse($result);
     }
 
     public function getJobsDurationSum(): int
@@ -119,6 +124,21 @@ class Client
     {
         $request = new Request('GET', sprintf('job/%s/open-api-lineage', $jobId));
         return $this->sendRequest($request);
+    }
+
+    /**
+     * @return array<Job>
+     */
+    private function mapJobsFromResponse(array $responseBody): array
+    {
+        $jobs = array_map(function (array $jobData): Job {
+            try {
+                return Job::fromApiResponse($jobData);
+            } catch (Throwable $e) {
+                throw new JobClientException('Failed to parse Job data: ' . $e->getMessage());
+            }
+        }, $responseBody);
+        return array_filter($jobs);
     }
 
     private function createDefaultDecider(int $maxRetries): Closure
@@ -221,21 +241,15 @@ class Client
         throw new JobClientException($exception->getMessage(), $exception->getCode(), $exception);
     }
 
-    public function waitForJobCompletion(string $jobId): array
+    public function waitForJobCompletion(string $jobId): Job
     {
-        $jobFinishedStatuses = [
-            ListJobsOptions::STATUS_CANCELLED,
-            ListJobsOptions::STATUS_SUCCESS,
-            ListJobsOptions::STATUS_ERROR,
-            ListJobsOptions::STATUS_TERMINATED,
-        ];
         $maxDelay = 10; // seconds
 
         $finished = false;
         $attempt = 0;
         do {
             $job = $this->getJob($jobId);
-            if (in_array($job['status'], $jobFinishedStatuses, true)) {
+            if ($job->isFinished) {
                 $finished = true;
             }
             $attempt++;

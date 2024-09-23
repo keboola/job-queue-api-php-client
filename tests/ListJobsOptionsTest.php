@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
+use Keboola\JobQueueClient\DTO\JobStates;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -26,7 +27,7 @@ class ListJobsOptionsTest extends TestCase
         $options->setConfigRowIds(['d', 'e', 'f']);
         $options->setProjects(['12', '13']);
         $options->setModes(['run', 'debug']);
-        $options->setStatuses([ListJobsOptions::STATUS_SUCCESS, ListJobsOptions::STATUS_PROCESSING]);
+        $options->setStatuses([JobStates::SUCCESS->value, JobStates::PROCESSING->value]);
         $options->setParentRunId('123');
         $options->setType(JobType::STANDARD);
         $options->setCreatedTimeFrom(new DateTimeImmutable('2022-02-02 1:12:23'));
@@ -56,7 +57,7 @@ class ListJobsOptionsTest extends TestCase
         self::assertSame(['12', '13'], $options->getProjects());
         self::assertSame(['run', 'debug'], $options->getModes());
         self::assertSame(
-            [ListJobsOptions::STATUS_SUCCESS, ListJobsOptions::STATUS_PROCESSING],
+            [JobStates::SUCCESS->value, JobStates::PROCESSING->value],
             $options->getStatuses(),
         );
         self::assertSame('123', $options->getParentRunId());

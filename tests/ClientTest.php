@@ -13,6 +13,7 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Keboola\JobQueueClient\Client;
+use Keboola\JobQueueClient\DTO\JobStates;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
@@ -112,14 +113,38 @@ class ClientTest extends TestCase
                 '{
                     "id": "683194249",
                     "runId": "683194249",
+                    "parentRunId": "",
+                    "project": {"id": "123"},
+                    "token": {"id": "456", "description": "my token"},
                     "status": "created",
                     "desiredStatus": "processing",
                     "mode": "run",
                     "component": "keboola.ex-db-snowflake",
                     "config": "123",
-                    "configRow": null,
+                    "configData": {},
+                    "configRowIds": null,
                     "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
+                    "createdTime": "2021-03-04T21:59:49+00:00",
+                    "startTime": null,
+                    "endTime": null,
+                    "durationSeconds": 0,
+                    "result": [],
+                    "usageData": [],
+                    "isFinished": false,
+                    "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                    "branchId": "6",
+                    "variableValuesId": null,
+                    "variableValuesData": {"values": []},
+                    "backend": {"context": "18-transformation"},
+                    "executor": "dind",
+                    "metrics": [],
+                    "behavior": {"onError": null},
+                    "parallelism": null,
+                    "type": "standard",
+                    "orchestrationJobId": null,
+                    "orchestrationTaskId": null,
+                    "onlyOrchestrationTaskIds": null,
+                    "previousJobId": null
                 }',
             ),
         ]);
@@ -130,10 +155,13 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
-        self::assertEquals('683194249', $job['id']);
-        self::assertEquals('683194249', $job['runId']);
-        self::assertEquals('created', $job['status']);
+        self::assertEquals('683194249', $job->id);
+        self::assertEquals('683194249', $job->runId);
+        self::assertEquals('created', $job->status);
         self::assertCount(1, $requestHistory);
+        self::assertFalse($job->isError());
+        self::assertFalse($job->isSuccess());
+
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
         self::assertEquals('http://example.com/jobs', $request->getUri()->__toString());
@@ -247,14 +275,39 @@ class ClientTest extends TestCase
                 '{
                     "id": "683194249",
                     "runId": "683194249",
+                    "parentRunId": "",
+                    "project": {"id": "123"},
+                    "token": {"id": "456", "description": "my token"},
+                    "status": "created",
                     "status": "created",
                     "desiredStatus": "processing",
                     "mode": "run",
                     "component": "keboola.ex-db-snowflake",
                     "config": "123",
-                    "configRow": null,
+                    "configData": {},
+                    "configRowIds": null,
                     "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
+                    "createdTime": "2021-03-04T21:59:49+00:00",
+                    "startTime": null,
+                    "endTime": null,
+                    "durationSeconds": 0,
+                    "result": [],
+                    "usageData": [],
+                    "isFinished": false,
+                    "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                    "branchId": "6",
+                    "variableValuesId": null,
+                    "variableValuesData": {"values": []},
+                    "backend": {"context": "18-transformation"},
+                    "executor": "dind",
+                    "metrics": [],
+                    "behavior": {"onError": null},
+                    "parallelism": null,
+                    "type": "standard",
+                    "orchestrationJobId": null,
+                    "orchestrationTaskId": null,
+                    "onlyOrchestrationTaskIds": null,
+                    "previousJobId": null
                 }',
             ),
         ]);
@@ -293,14 +346,38 @@ class ClientTest extends TestCase
                 '{
                     "id": "683194249",
                     "runId": "683194249",
+                    "parentRunId": "",
+                    "project": {"id": "123"},
+                    "token": {"id": "456", "description": "my token"},
                     "status": "created",
                     "desiredStatus": "processing",
                     "mode": "run",
                     "component": "keboola.ex-db-snowflake",
                     "config": "123",
-                    "configRow": null,
+                                        "configData": {},
+                    "configRowIds": null,
                     "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
+                    "createdTime": "2021-03-04T21:59:49+00:00",
+                    "startTime": null,
+                    "endTime": null,
+                    "durationSeconds": 0,
+                    "result": [],
+                    "usageData": [],
+                    "isFinished": false,
+                    "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                    "branchId": "6",
+                    "variableValuesId": null,
+                    "variableValuesData": {"values": []},
+                    "backend": {"context": "18-transformation"},
+                    "executor": "dind",
+                    "metrics": [],
+                    "behavior": {"onError": null},
+                    "parallelism": null,
+                    "type": "standard",
+                    "orchestrationJobId": null,
+                    "orchestrationTaskId": null,
+                    "onlyOrchestrationTaskIds": null,
+                    "previousJobId": null
                 }',
             ),
         ]);
@@ -311,9 +388,9 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
-        self::assertEquals('683194249', $job['id']);
-        self::assertEquals('683194249', $job['runId']);
-        self::assertEquals('created', $job['status']);
+        self::assertEquals('683194249', $job->id);
+        self::assertEquals('683194249', $job->runId);
+        self::assertEquals('created', $job->status);
         self::assertCount(3, $requestHistory);
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
@@ -590,10 +667,11 @@ class ClientTest extends TestCase
                             'values' => [],
                         ],
                         'backend' => [],
+                        'executor' => 'dind',
                         'metrics' => [
                             'backend' => [
-                                'size' => null,
-                                'containerSize' => 'small',
+                                'context' => null,
+                                'type' => 'small',
                             ],
                             'storage' => [
                                 'inputTablesBytesSum' => 0,
@@ -605,6 +683,9 @@ class ClientTest extends TestCase
                         'parallelism' => null,
                         'type' => 'standard',
                         'orchestrationJobId' => null,
+                        'orchestrationTaskId' => null,
+                        'onlyOrchestrationTaskIds' => null,
+                        'previousJobId' => null,
                     ],
                 ]),
             ),
@@ -728,14 +809,38 @@ class ClientTest extends TestCase
                     '{
                         "id": "683194249",
                         "runId": "683194249",
+                        "parentRunId": "",
+                        "project": {"id": "123"},
+                        "token": {"id": "456", "description": "my token"},
                         "status": "created",
                         "desiredStatus": "processing",
                         "mode": "run",
                         "component": "keboola.ex-db-snowflake",
                         "config": "123",
-                        "configRow": null,
+                        "configData": {},
+                        "configRowIds": null,
                         "tag": null,
-                        "createdTime": "2021-03-04T21:59:49+00:00"
+                        "createdTime": "2021-03-04T21:59:49+00:00",
+                        "startTime": null,
+                        "endTime": null,
+                        "durationSeconds": 0,
+                        "result": [],
+                        "usageData": [],
+                        "isFinished": false,
+                        "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                        "branchId": "6",
+                        "variableValuesId": null,
+                        "variableValuesData": {"values": []},
+                        "backend": {"context": "18-transformation"},
+                        "executor": "dind",
+                        "metrics": [],
+                        "behavior": {"onError": null},
+                        "parallelism": null,
+                        "type": "standard",
+                        "orchestrationJobId": null,
+                        "orchestrationTaskId": null,
+                        "onlyOrchestrationTaskIds": null,
+                        "previousJobId": null
                     }',
                 ),
             ],
@@ -763,7 +868,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
         $result = $client->createJob(new JobData('dummy'));
-        self::assertSame('683194249', $result['id']);
+        self::assertSame('683194249', $result->id);
     }
 
     public function testRetryCurlExceptionWithoutContext(): void
@@ -795,59 +900,62 @@ class ClientTest extends TestCase
         $client->createJob(new JobData('dummy'));
     }
 
-    /**
-     * @dataProvider provideWaitForCompletionTestData
-     */
-    public function testWaitForCompletion(string $finalState): void
+    public function testWaitForCompletion(): void
     {
+        $body = '{
+            "id": "683194249",
+            "runId": "683194249",
+            "parentRunId": "",
+            "project": {"id": "123"},
+            "token": {"id": "456", "description": "my token"},
+            "status": "created",
+            "desiredStatus": "processing",
+            "mode": "run",
+            "component": "keboola.ex-db-snowflake",
+            "config": "123",
+            "configData": {},
+            "configRowIds": null,
+            "tag": null,
+            "createdTime": "2021-03-04T21:59:49+00:00",
+            "startTime": null,
+            "endTime": null,
+            "durationSeconds": 0,
+            "result": [],
+            "usageData": [],
+            "isFinished": false,
+            "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+            "branchId": "6",
+            "variableValuesId": null,
+            "variableValuesData": {"values": []},
+            "backend": {"context": "18-transformation"},
+            "executor": "dind",
+            "metrics": [],
+            "behavior": {"onError": null},
+            "parallelism": null,
+            "type": "standard",
+            "orchestrationJobId": null,
+            "orchestrationTaskId": null,
+            "onlyOrchestrationTaskIds": null,
+            "previousJobId": null
+        }';
+        $finalBody = json_decode($body, true);
+        $finalBody['isFinished'] = true;
+        $finalBody = (string) json_encode($finalBody);
         $mock = new MockHandler([
             new Response(
                 201,
                 ['Content-Type' => 'application/json'],
-                '{
-                    "id": "683194249",
-                    "runId": "683194249",
-                    "status": "created",
-                    "desiredStatus": "processing",
-                    "mode": "run",
-                    "component": "keboola.ex-db-snowflake",
-                    "config": "123",
-                    "configRow": null,
-                    "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
-                }',
+                $body,
             ),
             new Response(
                 201,
                 ['Content-Type' => 'application/json'],
-                '{
-                    "id": "683194249",
-                    "runId": "683194249",
-                    "status": "processing",
-                    "desiredStatus": "processing",
-                    "mode": "run",
-                    "component": "keboola.ex-db-snowflake",
-                    "config": "123",
-                    "configRow": null,
-                    "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
-                }',
+                $body,
             ),
             new Response(
                 201,
                 ['Content-Type' => 'application/json'],
-                '{
-                    "id": "683194249",
-                    "runId": "683194249",
-                    "status": "' . $finalState . '",
-                    "desiredStatus": "processing",
-                    "mode": "run",
-                    "component": "keboola.ex-db-snowflake",
-                    "config": "123",
-                    "configRow": null,
-                    "tag": null,
-                    "createdTime": "2021-03-04T21:59:49+00:00"
-                }',
+                $finalBody,
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -857,11 +965,11 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $job = $client->createJob(new JobData('keboola.ex-db-storage', '123'));
-        $job = $client->waitForJobCompletion($job['id']);
+        $job = $client->waitForJobCompletion($job->id);
 
-        self::assertSame('683194249', $job['id']);
-        self::assertSame('683194249', $job['runId']);
-        self::assertSame($finalState, $job['status']);
+        self::assertSame('683194249', $job->id);
+        self::assertSame('683194249', $job->runId);
+        self::assertSame(true, $job->isFinished);
         self::assertCount(3, $requestHistory);
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
@@ -870,13 +978,5 @@ class ClientTest extends TestCase
         self::assertSame('testToken', $request->getHeader('X-StorageApi-Token')[0]);
         self::assertSame('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
         self::assertSame('application/json', $request->getHeader('Content-type')[0]);
-    }
-
-    public function provideWaitForCompletionTestData(): Generator
-    {
-        yield ['finalState' => ListJobsOptions::STATUS_SUCCESS];
-        yield ['finalState' => ListJobsOptions::STATUS_ERROR];
-        yield ['finalState' => ListJobsOptions::STATUS_TERMINATED];
-        yield ['finalState' => ListJobsOptions::STATUS_CANCELLED];
     }
 }
