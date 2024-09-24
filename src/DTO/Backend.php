@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Keboola\JobQueueClient\DTO;
 
+use Keboola\JobQueueClient\Exception\ClientException;
+use Throwable;
+
 readonly class Backend
 {
     public function __construct(
@@ -15,10 +18,14 @@ readonly class Backend
 
     public static function fromApiResponse(array $response): self
     {
-        return new self(
-            context: $response['context'] ?? null,
-            containerType: $response['containerType'] ?? null,
-            type: $response['type'] ?? null,
-        );
+        try {
+            return new self(
+                context: $response['context'] ?? null,
+                containerType: $response['containerType'] ?? null,
+                type: $response['type'] ?? null,
+            );
+        } catch (Throwable $e) {
+            throw new ClientException('Failed to parse Backend data: ' . $e->getMessage(), $e->getCode(), $e);
+        }
     }
 }

@@ -37,6 +37,19 @@ class ResponseExceptionTest extends TestCase
         self::assertSame('some.error', $exception->getErrorCode());
     }
 
+    public function testGetErrorCodeNumeric(): void
+    {
+        $exception = new ResponseException('message', 0, []);
+        self::assertNull($exception->getErrorCode());
+
+        $exception = new ResponseException('message', 0, [
+            'context' => [
+                'errorCode' => 123,
+            ],
+        ]);
+        self::assertSame('123', $exception->getErrorCode());
+    }
+
     public function testIsErrorCode(): void
     {
         $exception = new ResponseException('message', 0, []);

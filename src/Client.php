@@ -32,10 +32,10 @@ class Client
 {
     private const DEFAULT_USER_AGENT = 'Job Queue PHP Client';
     private const DEFAULT_BACKOFF_RETRIES = 3;
-    private const JSON_DEPTH = 512;
-
-    /** @var GuzzleClient */
-    protected $guzzle;
+    private const GUZZLE_CONNECT_TIMEOUT_SECONDS = 10;
+    private const GUZZLE_TIMEOUT_SECONDS = 120;
+    private const MAX_WAIT_DELAY_SECONDS = 10;
+    protected GuzzleClient $guzzle;
 
     /**
      * @param array{
@@ -131,14 +131,9 @@ class Client
      */
     private function mapJobsFromResponse(array $responseBody): array
     {
-        $jobs = array_map(function (array $jobData): Job {
-            try {
-                return Job::fromApiResponse($jobData);
-            } catch (Throwable $e) {
-                throw new JobClientException('Failed to parse Job data: ' . $e->getMessage());
-            }
+        return array_map(function (array $jobData): Job {
+            return Job::fromApiResponse($jobData);
         }, $responseBody);
-        return array_filter($jobs);
     }
 
     private function createDefaultDecider(int $maxRetries): Closure
@@ -157,7 +152,8 @@ class Client
                 return true;
             } elseif ($error &&
                 (is_a($error, RequestException::class) || is_a($error, ConnectException::class)) &&
-                in_array($error->getHandlerContext()['errno'] ?? 0, [CURLE_RECV_ERROR, CURLE_SEND_ERROR])
+                isset($error->getHandlerContext()['errno']) &&
+                in_array($error->getHandlerContext()['errno'], [CURLE_RECV_ERROR, CURLE_SEND_ERROR])
             ) {
                 return true;
             } else {
@@ -196,8 +192,8 @@ class Client
         return new GuzzleClient([
             'base_uri' => $url,
             'handler' => $handlerStack,
-            'connect_timeout' => 10,
-            'timeout' => 120,
+            'connect_timeout' => self::GUZZLE_CONNECT_TIMEOUT_SECONDS,
+            'timeout' => self::GUZZLE_TIMEOUT_SECONDS,
         ]);
     }
 
@@ -218,8 +214,7 @@ class Client
                 $data = (array) json_decode(
                     $response->getBody()->getContents(),
                     true,
-                    self::JSON_DEPTH,
-                    JSON_THROW_ON_ERROR,
+                    flags: JSON_THROW_ON_ERROR,
                 );
             } catch (JsonException $e) {
                 throw new JobClientException(
@@ -243,7 +238,7 @@ class Client
 
     public function waitForJobCompletion(string $jobId): Job
     {
-        $maxDelay = 10; // seconds
+        $maxDelay = self::MAX_WAIT_DELAY_SECONDS;
 
         $finished = false;
         $attempt = 0;

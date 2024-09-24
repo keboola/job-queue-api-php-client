@@ -14,7 +14,6 @@ class JobQueueClientFactoryTest extends TestCase
     {
         $factory = new JobQueueClientFactory('https://example.com', 'user-agent');
         $client = $factory->createClientFromToken('token');
-
         self::assertInstanceOf(Client::class, $client);
     }
 }

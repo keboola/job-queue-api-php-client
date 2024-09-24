@@ -222,7 +222,8 @@ class ClientTest extends TestCase
         $client = $this->getClient(['handler' => $requestHandler]);
 
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Unable to parse response body into JSON: ');
+        $this->expectExceptionMessage('Unable to parse response body into JSON: Syntax error');
+        $this->expectExceptionCode(0);
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
@@ -797,7 +798,8 @@ class ClientTest extends TestCase
         $client->createJob(new JobData('dummy'));
     }
 
-    public function testRetryCurlException(): void
+    /** @dataProvider curlErrorProvider */
+    public function testRetryCurlException(int $curlErrorNumber): void
     {
         $mock = new MockHandler(
             [
@@ -844,7 +846,7 @@ class ClientTest extends TestCase
                     }',
                 ),
             ],
-            function (ResponseInterface $a) {
+            function (ResponseInterface $a) use ($curlErrorNumber) {
                 if ($a->getStatusCode() === 500) {
                     // abusing the mockhandler here: override the mock response and throw a Request exception
                     throw new RequestException(
@@ -853,7 +855,7 @@ class ClientTest extends TestCase
                         null,
                         null,
                         [
-                            'errno' => 56,
+                            'errno' => $curlErrorNumber,
                             'error' => 'OpenSSL SSL_read: Connection reset by peer, errno 104',
                         ],
                     );
@@ -869,6 +871,14 @@ class ClientTest extends TestCase
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
         $result = $client->createJob(new JobData('dummy'));
         self::assertSame('683194249', $result->id);
+    }
+
+    public function curlErrorProvider(): array
+    {
+        return [
+            [56],
+            [55],
+        ];
     }
 
     public function testRetryCurlExceptionWithoutContext(): void
