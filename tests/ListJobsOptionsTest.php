@@ -7,6 +7,7 @@ namespace Keboola\JobQueueClient\Tests;
 use DateTimeImmutable;
 use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +28,7 @@ class ListJobsOptionsTest extends TestCase
         $options->setConfigRowIds(['d', 'e', 'f']);
         $options->setProjects(['12', '13']);
         $options->setModes(['run', 'debug']);
-        $options->setStatuses([Job::STATUS_SUCCESS, Job::STATUS_PROCESSING]);
+        $options->setStatuses([JobStatuses::SUCCESS, JobStatuses::PROCESSING]);
         $options->setParentRunId('123');
         $options->setType(JobType::STANDARD);
         $options->setCreatedTimeFrom(new DateTimeImmutable('2022-02-02 1:12:23'));
@@ -57,7 +58,7 @@ class ListJobsOptionsTest extends TestCase
         self::assertSame(['12', '13'], $options->getProjects());
         self::assertSame(['run', 'debug'], $options->getModes());
         self::assertSame(
-            [Job::STATUS_SUCCESS, Job::STATUS_PROCESSING],
+            [JobStatuses::SUCCESS, JobStatuses::PROCESSING],
             $options->getStatuses(),
         );
         self::assertSame('123', $options->getParentRunId());
@@ -86,7 +87,6 @@ class ListJobsOptionsTest extends TestCase
             'configRowIds' => ['d', 'e', 'f'],
             'mode' => ['run', 'debug'],
             'projectId' => ['12', '13'],
-            'status' => ['success', 'processing'],
             'durationSecondsFrom' => 5,
             'durationSecondsTo' => 7200,
             'offset' => 20,
@@ -94,6 +94,7 @@ class ListJobsOptionsTest extends TestCase
             'sortBy' => 'id',
             'sortOrder' => 'desc',
             'type' => 'standard',
+            'status' => [JobStatuses::SUCCESS->value, JobStatuses::PROCESSING->value],
             'parentRunId' => '123',
             'startTimeFrom' => ('2021-02-02T01:12:23+00:00'),
             'startTimeTo' => '2021-02-20T01:12:23+00:00',

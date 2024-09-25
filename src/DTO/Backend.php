@@ -18,14 +18,10 @@ readonly class Backend
 
     public static function fromApiResponse(array $response): self
     {
-        try {
-            return new self(
-                context: $response['context'] ?? null,
-                containerType: $response['containerType'] ?? null,
-                type: $response['type'] ?? null,
-            );
-        } catch (Throwable $e) {
-            throw new ClientException('Failed to parse Backend data: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        return new self(
+            context: $response['context'] ?? null,
+            containerType: $response['containerType'] ?? null,
+            type: $response['type'] ?? null,
+        );
     }
 }

@@ -16,12 +16,8 @@ readonly class Behavior
 
     public static function fromApiResponse(array $response): self
     {
-        try {
-            return new self(
-                onError: $response['onError'] ?? null,
-            );
-        } catch (Throwable $e) {
-            throw new ClientException('Failed to parse Behavior data: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        return new self(
+            onError: $response['onError'] ?? null,
+        );
     }
 }

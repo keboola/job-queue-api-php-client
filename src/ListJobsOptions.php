@@ -19,6 +19,9 @@ class ListJobsOptions
     private array $configRowIds;
     private array $modes;
     private array $projects;
+    /**
+     * @var array<JobStatuses>
+     */
     private array $statuses;
     private DateTimeInterface $startTimeFrom;
     private DateTimeInterface $startTimeTo;
@@ -54,7 +57,6 @@ class ListJobsOptions
             'configRowIds' => 'configRowIds',
             'modes' => 'mode',
             'projects' => 'projectId',
-            'statuses' => 'status',
         ];
         $scalarProps = [
             'durationSecondsFrom' => 'durationSecondsFrom',
@@ -66,6 +68,9 @@ class ListJobsOptions
         ];
         $enumProps = [
             'type' => 'type',
+        ];
+        $arrayableEnumProps = [
+            'statuses' => 'status',
         ];
         $scalarPropsWithEmptyValueAllowed = [
             'parentRunId' => 'parentRunId',
@@ -94,6 +99,13 @@ class ListJobsOptions
         foreach ($enumProps as $propName => $paramName) {
             if (!empty($this->$propName)) {
                 $parameters[$paramName] =  $this->$propName->value;
+            }
+        }
+        foreach ($arrayableEnumProps as $propName => $paramName) {
+            if (!empty($this->$propName)) {
+                foreach ($this->$propName as $value) {
+                    $parameters[$paramName][] =  $value->value;
+                }
             }
         }
         foreach ($scalarPropsWithEmptyValueAllowed as $propName => $paramName) {
@@ -220,11 +232,18 @@ class ListJobsOptions
         return $this;
     }
 
+    /**
+     * @return JobStatuses[]
+     */
     public function getStatuses(): array
     {
         return $this->statuses;
     }
 
+    /**
+     * @param JobStatuses[] $values
+     * @return $this
+     */
     public function setStatuses(array $values): self
     {
         $this->statuses = $values;

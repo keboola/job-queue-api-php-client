@@ -171,13 +171,22 @@ class ClientTest extends TestCase
         self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
     }
 
+    public function testInvalidRequest(): void
+    {
+        $client = $this->getClient([]);
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Invalid job data: Type is not supported');
+        $res = fopen(sys_get_temp_dir() . '/touch', 'w');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
+    }
+
     public function testInvalidResponse(): void
     {
         $mock = new MockHandler([
             new Response(
                 200,
                 ['Content-Type' => 'application/json'],
-                'invalid json',
+                'invalid',
             ),
         ]);
         // Add the history middleware to the handler stack.
@@ -187,9 +196,88 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Invalid job data: Type is not supported');
-        $res = fopen(sys_get_temp_dir() . '/touch', 'w');
-        $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
+        $this->expectExceptionMessage('Unable to parse response body into JSON: Syntax error');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+    }
+
+    public function testCreateJobInvalidResponseContents(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{"id": "123"}',
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $this->expectException(ResponseException::class);
+        $this->expectExceptionMessage('Failed to parse Job data: Undefined array key "runId"');
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+    }
+
+    public function testGetJobInvalidResponseContents(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{"id": "123"}',
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $this->expectException(ResponseException::class);
+        $this->expectExceptionMessage('Undefined array key "runId"');
+        $client->getJob('123');
+    }
+
+    public function testTerminateJobInvalidResponseContents(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '{"id": "123"}',
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $this->expectException(ResponseException::class);
+        $this->expectExceptionMessage('Undefined array key "runId"');
+        $client->terminateJob('123');
+    }
+
+    public function testListJobsInvalidResponseContents(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                200,
+                ['Content-Type' => 'application/json'],
+                '[{"id": "123"}]',
+            ),
+        ]);
+        // Add the history middleware to the handler stack.
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $this->expectException(ResponseException::class);
+        $this->expectExceptionMessage('Undefined array key "runId"');
+        $client->listJobs(new ListJobsOptions());
     }
 
     public function testClientExceptionIsThrownWhenGuzzleRequestErrorOccurs(): void

@@ -16,12 +16,8 @@ class VariableValuesData
 
     public static function fromApiResponse(array $response): self
     {
-        try {
-            return new self(
-                values: $response['values'] ?? null,
-            );
-        } catch (Throwable $e) {
-            throw new ClientException('Failed to parse variableValuesData: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        return new self(
+            values: $response['values'] ?? null,
+        );
     }
 }

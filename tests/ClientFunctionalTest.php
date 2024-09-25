@@ -10,6 +10,7 @@ use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobData;
+use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\ListJobsOptions;
 use Keboola\StorageApi\Client as StorageClient;
 use Keboola\StorageApi\Components;
@@ -206,7 +207,7 @@ class ClientFunctionalTest extends TestCase
         yield 'By statuses' => [
             'listJobOptions' => (new ListJobsOptions())
                 ->setConfigs([$configurationId])
-                ->setStatuses(['created']),
+                ->setStatuses([JobStatuses::CREATED]),
             'expectedJobs' => [
                 $job2,
                 $job1,

@@ -6,8 +6,9 @@ namespace Keboola\JobQueueClient\Tests\DTO;
 
 use Generator;
 use Keboola\JobQueueClient\DTO\Job;
-use Keboola\JobQueueClient\Exception\ClientException;
 use PHPUnit\Framework\TestCase;
+use Throwable;
+use TypeError;
 
 class JobTest extends TestCase
 {
@@ -53,10 +54,17 @@ class JobTest extends TestCase
         'previousJobId' => null,
     ];
 
-    /** @dataProvider invalidJobDataProvider */
-    public function testCreateInvalid(array $invalidData, string $expectedMessage, int $expectedCode): void
-    {
-        $this->expectException(ClientException::class);
+    /**
+     * @dataProvider invalidJobDataProvider
+     * @param class-string<Throwable> $expectedExceptionClass
+     */
+    public function testCreateInvalid(
+        array $invalidData,
+        string $expectedMessage,
+        int $expectedCode,
+        string $expectedExceptionClass,
+    ): void {
+        $this->expectException($expectedExceptionClass);
         $this->expectExceptionMessageMatches($expectedMessage);
         $this->expectExceptionCode($expectedCode);
         Job::fromApiResponse($invalidData);
@@ -73,21 +81,25 @@ class JobTest extends TestCase
 
     public function invalidJobDataProvider(): Generator
     {
-        yield 'missing required fields' => [
+        yield 'missing base fields' => [
             'jobData' => [
                 'id' => '123',
                 'runId' => '456',
+                'parentRunId' => 3432,
+                'project' => 'invalid',
             ],
-            'expectedMessage' => '#Failed to parse Job data: Undefined array key "parentRunId"#',
-            'expectedCode' => 2,
+            'expectedMessage' => '#Argument \\#1 \\(\\$response\\) must be of type array, string given#',
+            'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
 
         $jobData = $this->validJobData;
-        unset($jobData['token']['id']);
+        $jobData['token']['id'] = [];
         yield 'invalid token data' => [
             'jobData' => $jobData,
-            'expectedMessage' => '#Failed to parse Token data: Undefined array key "id"#',
-            'expectedCode' => 2,
+            'expectedMessage' => '#Argument \\#1 \\(\\$id\\) must be of type string, array given#',
+            'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
 
         $jobData = $this->validJobData;
@@ -95,16 +107,18 @@ class JobTest extends TestCase
         yield 'broken variable values' => [
             'jobData' => $jobData,
             // phpcs:ignore Generic.Files.LineLength
-            'expectedMessage' => '#Failed to parse variableValuesData:.*Argument \\#1 \\(\\$values\\) must be of type \\?array, string given#',
+            'expectedMessage' => '#Argument \\#1 \\(\\$values\\) must be of type \\?array, string given#',
             'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
 
         $jobData = $this->validJobData;
-        unset($jobData['project']['id']);
+        $jobData['project']['id'] = [];
         yield 'broken project data' => [
             'jobData' => $jobData,
-            'expectedMessage' => '#Failed to parse Project data: Undefined array key "id"#',
-            'expectedCode' => 2,
+            'expectedMessage' => '#Argument \\#1 \\(\\$id\\) must be of type string, array given#',
+            'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
 
         $jobData = $this->validJobData;
@@ -112,8 +126,9 @@ class JobTest extends TestCase
         yield 'broken created time' => [
             'jobData' => $jobData,
             // phpcs:ignore Generic.Files.LineLength
-            'expectedMessage' => '#Failed to parse Job data\\: Failed to parse time string \\(invalid\\) at position 0 \\(i\\)#',
+            'expectedMessage' => '#Failed to parse time string \\(invalid\\) at position 0 \\(i\\)#',
             'expectedCode' => 0,
+            'expectedException' => Throwable::class,
         ];
 
         $jobData = $this->validJobData;
@@ -121,8 +136,9 @@ class JobTest extends TestCase
         yield 'broken behavior' => [
             'jobData' => $jobData,
             // phpcs:ignore Generic.Files.LineLength
-            'expectedMessage' => '#Failed to parse Behavior data.*Argument \\#1 \\(\\$onError\\) must be of type \\?string, array given#',
+            'expectedMessage' => '#Argument \\#1 \\(\\$onError\\) must be of type \\?string, array given#',
             'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
 
         $jobData = $this->validJobData;
@@ -130,8 +146,9 @@ class JobTest extends TestCase
         yield 'broken backend' => [
             'jobData' => $jobData,
             // phpcs:ignore Generic.Files.LineLength
-            'expectedMessage' => '#Failed to parse Backend data.*Argument \\#1 \\(\\$context\\) must be of type \\?string, array given#',
+            'expectedMessage' => '#Argument \\#1 \\(\\$context\\) must be of type \\?string, array given#',
             'expectedCode' => 0,
+            'expectedException' => TypeError::class,
         ];
     }
 }

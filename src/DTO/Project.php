@@ -16,12 +16,8 @@ readonly class Project
 
     public static function fromApiResponse(array $response): self
     {
-        try {
-            return new self(
-                id: $response['id'],
-            );
-        } catch (Throwable $e) {
-            throw new ClientException('Failed to parse Project data: ' . $e->getMessage(), $e->getCode(), $e);
-        }
+        return new self(
+            id: $response['id'],
+        );
     }
 }

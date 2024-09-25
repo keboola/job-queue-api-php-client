@@ -87,14 +87,14 @@ class Client
             throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
         $result = $this->sendRequest($request);
-        return Job::fromApiResponse($result);
+        return $this->mapJobFromResponse($result);
     }
 
     public function getJob(string $jobId): Job
     {
         $request = new Request('GET', sprintf('jobs/%s', $jobId));
         $result = $this->sendRequest($request);
-        return Job::fromApiResponse($result);
+        return $this->mapJobFromResponse($result);
     }
 
     public function listJobs(ListJobsOptions $listOptions): array
@@ -110,7 +110,7 @@ class Client
     public function terminateJob(string $jobId): Job
     {
         $result = $this->sendRequest(new Request('POST', sprintf('jobs/%s/kill', $jobId)));
-        return Job::fromApiResponse($result);
+        return $this->mapJobFromResponse($result);
     }
 
     public function getJobsDurationSum(): int
@@ -131,9 +131,16 @@ class Client
      */
     private function mapJobsFromResponse(array $responseBody): array
     {
-        return array_map(function (array $jobData): Job {
-            return Job::fromApiResponse($jobData);
-        }, $responseBody);
+        return array_map([$this, 'mapJobFromResponse'], $responseBody);
+    }
+
+    private function mapJobFromResponse(array $response): Job
+    {
+        try {
+            return Job::fromApiResponse($response);
+        } catch (Throwable $e) {
+            throw new ResponseException('Failed to parse Job data: ' . $e->getMessage(), $e->getCode(), $response, $e);
+        }
     }
 
     private function createDefaultDecider(int $maxRetries): Closure
