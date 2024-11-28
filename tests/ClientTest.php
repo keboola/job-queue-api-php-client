@@ -13,7 +13,6 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use Keboola\JobQueueClient\Client;
-use Keboola\JobQueueClient\DTO\JobStates;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
@@ -795,26 +794,26 @@ class ClientTest extends TestCase
     {
         yield 'empty options' => [
             'options' => new ListJobsOptions(),
-            'url' => 'http://example.com/jobs?limit=100',
+            'url' => 'http://example.com/search/jobs?limit=100',
         ];
 
         yield 'custom limit' => [
             'options' => (new ListJobsOptions())->setLimit(50),
-            'url' => 'http://example.com/jobs?limit=50',
+            'url' => 'http://example.com/search/jobs?limit=50',
         ];
 
         yield 'sort by id, asc' => [
             'options' => (new ListJobsOptions())
                 ->setSortBy('id')
                 ->setSortOrder('asc'),
-            'url' => 'http://example.com/jobs?limit=100&sortBy=id&sortOrder=asc',
+            'url' => 'http://example.com/search/jobs?limit=100&sortBy=id&sortOrder=asc',
         ];
 
         yield 'filter date range' => [
             'options' => (new ListJobsOptions())
                 ->setCreatedTimeFrom(new DateTimeImmutable('2022-03-01T12:17:05+10:00'))
                 ->setCreatedTimeTo(new DateTimeImmutable('2022-07-14T05:11:45-08:20')),
-            'url' => 'http://example.com/jobs?limit=100'
+            'url' => 'http://example.com/search/jobs?limit=100'
                 . '&createdTimeFrom=2022-03-01T12%3A17%3A05%2B10%3A00'
                 . '&createdTimeTo=2022-07-14T05%3A11%3A45-08%3A20',
         ];
@@ -824,31 +823,31 @@ class ClientTest extends TestCase
                 ->setComponents([
                     'keboola.test',
                 ]),
-            'url' => 'http://example.com/jobs?component%5B0%5D=keboola.test&limit=100',
+            'url' => 'http://example.com/search/jobs?component%5B0%5D=keboola.test&limit=100',
         ];
 
         yield 'filter by config' => [
             'options' => (new ListJobsOptions())
-                ->setConfigs(['123456']),
-            'url' => 'http://example.com/jobs?config%5B0%5D=123456&limit=100',
+                ->setConfigIds(['123456']),
+            'url' => 'http://example.com/search/jobs?configId%5B0%5D=123456&limit=100',
         ];
 
         yield 'filter by type' => [
             'options' => (new ListJobsOptions())
                 ->setType(JobType::STANDARD),
-            'url' => 'http://example.com/jobs?limit=100&type=standard',
+            'url' => 'http://example.com/search/jobs?limit=100&type=standard',
         ];
 
         yield 'filter by branch' => [
             'options' => (new ListJobsOptions())
                 ->setBranchIds(['dev-branch']),
-            'url' => 'http://example.com/jobs?branchId%5B0%5D=dev-branch&limit=100',
+            'url' => 'http://example.com/search/jobs?branchId%5B0%5D=dev-branch&limit=100',
         ];
 
         yield 'filter by token id' => [
             'options' => (new ListJobsOptions())
                 ->setTokenIds(['789']),
-            'url' => 'http://example.com/jobs?tokenId%5B0%5D=789&limit=100',
+            'url' => 'http://example.com/search/jobs?tokenId%5B0%5D=789&limit=100',
         ];
     }
 
