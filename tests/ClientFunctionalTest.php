@@ -12,9 +12,11 @@ use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\ListJobsOptions;
+use Keboola\Settle\SettleFactory;
 use Keboola\StorageApi\Client as StorageClient;
 use Keboola\StorageApi\Components;
 use Keboola\StorageApi\Options\Components\Configuration;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -56,7 +58,7 @@ class ClientFunctionalTest extends TestCase
         $components = new Components(self::getStorageClient());
         try {
             $components->deleteConfiguration($componentId, $configurationId);
-        } catch (Throwable $e) {
+        } catch (Throwable) {
         }
     }
 
@@ -162,6 +164,7 @@ class ClientFunctionalTest extends TestCase
             self::COMPONENT_ID_2,
             $configurationId2,
         ));
+
         $client->createJob(new JobData(
             self::COMPONENT_ID_2,
             $configurationId3,
@@ -172,11 +175,22 @@ class ClientFunctionalTest extends TestCase
             [],
         ));
 
+        $logger = new Logger('test');
+        $factory = new SettleFactory($logger);
+        $settle = $factory->createSettle(maxAttempts: 10, maxAttemptsDelay: 5);
+        $settle->settle(
+            comparator: fn(string $status) => $status === 'error',
+            getCurrentValue: fn() => $client->getJob($job1->id)->status,
+        );
+        $settle->settle(
+            comparator: fn(string $status) => $status === 'error',
+            getCurrentValue: fn() => $client->getJob($job2->id)->status,
+        );
+
         $tokenRes = $this->getStorageClient()->verifyToken();
-        $projectId = $tokenRes['owner']['id'];
 
         yield 'By configs' => [
-            'listJobOptions' => (new ListJobsOptions())->setConfigs([
+            'listJobOptions' => (new ListJobsOptions())->setConfigIds([
                 $configurationId,
                 $configurationId2,
             ]),
@@ -188,17 +202,8 @@ class ClientFunctionalTest extends TestCase
         ];
         yield 'By components' => [
             'listJobOptions' => (new ListJobsOptions())
-                ->setConfigs([$configurationId])
+                ->setConfigIds([$configurationId])
                 ->setComponents([self::COMPONENT_ID]),
-            'expectedJobs' => [
-                $job2,
-                $job1,
-            ],
-        ];
-        yield 'By project' => [
-            'listJobOptions' => (new ListJobsOptions())
-                ->setConfigs([$configurationId])
-                ->setProjects([$projectId]),
             'expectedJobs' => [
                 $job2,
                 $job1,
@@ -206,8 +211,8 @@ class ClientFunctionalTest extends TestCase
         ];
         yield 'By statuses' => [
             'listJobOptions' => (new ListJobsOptions())
-                ->setConfigs([$configurationId])
-                ->setStatuses([JobStatuses::CREATED]),
+                ->setConfigIds([$configurationId])
+                ->setStatuses([JobStatuses::ERROR]),
             'expectedJobs' => [
                 $job2,
                 $job1,
@@ -215,7 +220,7 @@ class ClientFunctionalTest extends TestCase
         ];
         yield 'By startTime' => [
             'listJobOptions' => (new ListJobsOptions())
-                ->setConfigs([$configurationId])
+                ->setConfigIds([$configurationId])
                 ->setCreatedTimeFrom(new DateTime('-1 hour'))
                 ->setCreatedTimeTo(new DateTime('now')),
             'expectedJobs' => [
@@ -225,7 +230,7 @@ class ClientFunctionalTest extends TestCase
         ];
         yield 'By token id' => [
             'listJobOptions' => (new ListJobsOptions())
-                ->setConfigs([$configurationId])
+                ->setConfigIds([$configurationId])
                 ->setTokenIds([$tokenRes['id']]),
             'expectedJobs' => [
                 $job2,

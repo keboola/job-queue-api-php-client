@@ -15,10 +15,9 @@ class ListJobsOptions
     private array $tokenIds;
     private array $tokenDescriptions;
     private array $components;
-    private array $configs;
+    private array $configIds;
     private array $configRowIds;
     private array $modes;
-    private array $projects;
     /**
      * @var array<JobStatuses>
      */
@@ -53,10 +52,9 @@ class ListJobsOptions
             'tokenIds' => 'tokenId',
             'tokenDescriptions' => 'tokenDescription',
             'components' => 'component',
-            'configs' => 'config',
+            'configIds' => 'configId',
             'configRowIds' => 'configRowIds',
             'modes' => 'mode',
-            'projects' => 'projectId',
         ];
         $scalarProps = [
             'durationSecondsFrom' => 'durationSecondsFrom',
@@ -188,14 +186,14 @@ class ListJobsOptions
         return $this;
     }
 
-    public function getConfigs(): array
+    public function getConfigIds(): array
     {
-        return $this->configs;
+        return $this->configIds;
     }
 
-    public function setConfigs(array $values): self
+    public function setConfigIds(array $values): self
     {
-        $this->configs = $values;
+        $this->configIds = $values;
         return $this;
     }
 
@@ -218,17 +216,6 @@ class ListJobsOptions
     public function setModes(array $values): self
     {
         $this->modes = $values;
-        return $this;
-    }
-
-    public function getProjects(): array
-    {
-        return $this->projects;
-    }
-
-    public function setProjects(array $values): self
-    {
-        $this->projects = $values;
         return $this;
     }
 

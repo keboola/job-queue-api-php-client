@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
-use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\ClientException;
 use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\JobType;
@@ -24,9 +23,8 @@ class ListJobsOptionsTest extends TestCase
         $options->setTokenIds(['8', '9', '10']);
         $options->setTokenDescriptions(['new token', 'old token', 'bad token', 'good token']);
         $options->setComponents(['writer', 'extractor', 'orchestrator']);
-        $options->setConfigs(['a', 'b', 'c']);
+        $options->setConfigIds(['a', 'b', 'c']);
         $options->setConfigRowIds(['d', 'e', 'f']);
-        $options->setProjects(['12', '13']);
         $options->setModes(['run', 'debug']);
         $options->setStatuses([JobStatuses::SUCCESS, JobStatuses::PROCESSING]);
         $options->setParentRunId('123');
@@ -53,9 +51,8 @@ class ListJobsOptionsTest extends TestCase
             $options->getTokenDescriptions(),
         );
         self::assertSame(['writer', 'extractor', 'orchestrator'], $options->getComponents());
-        self::assertSame(['a', 'b', 'c'], $options->getConfigs());
+        self::assertSame(['a', 'b', 'c'], $options->getConfigIds());
         self::assertSame(['d', 'e', 'f'], $options->getConfigRowIds());
-        self::assertSame(['12', '13'], $options->getProjects());
         self::assertSame(['run', 'debug'], $options->getModes());
         self::assertSame(
             [JobStatuses::SUCCESS, JobStatuses::PROCESSING],
@@ -83,10 +80,9 @@ class ListJobsOptionsTest extends TestCase
             'tokenId' => ['8','9','10'],
             'tokenDescription' => ['new token', 'old token', 'bad token', 'good token'],
             'component' => ['writer', 'extractor', 'orchestrator'],
-            'config' => ['a', 'b', 'c'],
+            'configId' => ['a', 'b', 'c'],
             'configRowIds' => ['d', 'e', 'f'],
             'mode' => ['run', 'debug'],
-            'projectId' => ['12', '13'],
             'durationSecondsFrom' => 5,
             'durationSecondsTo' => 7200,
             'offset' => 20,

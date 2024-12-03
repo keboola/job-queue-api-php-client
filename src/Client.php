@@ -101,8 +101,9 @@ class Client
     {
         $request = new Request(
             'GET',
-            'jobs?' . http_build_query($listOptions->getQueryParameters()),
+            'search/jobs?' . http_build_query($listOptions->getQueryParameters()),
         );
+
         $result = $this->sendRequest($request);
         return $this->mapJobsFromResponse($result);
     }

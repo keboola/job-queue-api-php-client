@@ -41,7 +41,7 @@ readonly class Job
         public ?string $executor,
         public ?array $metrics,
         public ?Behavior $behavior,
-        public ?int $parallelism,
+        public ?string $parallelism,
         /** @var string "standard"|"container"|"phaseContainer"|"orchestrationContainer" */
         public string $type,
         public ?string $orchestrationJobId,
