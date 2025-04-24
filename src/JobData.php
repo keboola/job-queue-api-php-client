@@ -6,22 +6,15 @@ namespace Keboola\JobQueueClient;
 
 class JobData
 {
-    /** @var string */
-    private $componentId;
-    /** @var string|null */
-    private $configId;
-    /** @var array */
-    private $configData;
-    /** @var string */
-    private $mode;
-    /** @var array */
-    private $configRowIds;
-    /** @var string|null */
-    private $tag;
-    /** @var string|null */
-    private $branchId;
-    /** @var string|null */
-    private $orchestrationJobId;
+    private string $componentId;
+    private ?string $configId;
+    private array $configData;
+    private string $mode;
+    private array $configRowIds;
+    private ?string $tag;
+    private ?string $branchId;
+    private ?string $orchestrationJobId;
+    private ?string $parentRunId;
 
     public function __construct(
         string $componentId,
@@ -32,8 +25,8 @@ class JobData
         ?string $tag = null,
         ?string $branchId = null,
         ?string $orchestrationJobId = null,
+        ?string $parentRunId = null,
     ) {
-
         $this->componentId = $componentId;
         $this->configId = $configId;
         $this->configData = $configData;
@@ -42,6 +35,7 @@ class JobData
         $this->tag = $tag;
         $this->branchId = $branchId;
         $this->orchestrationJobId = $orchestrationJobId;
+        $this->parentRunId = $parentRunId;
     }
 
     public function getArray(): array
@@ -54,6 +48,7 @@ class JobData
             'tag' => $this->tag,
             'branchId' => $this->branchId,
             'orchestrationJobId' => $this->orchestrationJobId,
+            'parentRunId' => $this->parentRunId,
             'configData' => $this->configData,
         ];
     }

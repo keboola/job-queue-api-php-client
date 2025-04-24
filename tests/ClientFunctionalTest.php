@@ -99,6 +99,25 @@ class ClientFunctionalTest extends TestCase
         self::assertEquals('created', $createdJob->status);
     }
 
+    public function testCreateJobWithParentRunId(): void
+    {
+        $client = $this->getClient();
+        $createdJob = $client->createJob(new JobData(
+            componentId: self::COMPONENT_ID,
+            configData: [
+                'parameters' => [
+                    'foo' => 'bar',
+                ],
+            ],
+            parentRunId: '123456',
+        ));
+
+        self::assertNotEmpty($createdJob->id);
+        self::assertEquals('created', $createdJob->status);
+        self::assertEquals('123456', $createdJob->parentRunId);
+        self::assertStringContainsString('123456', $createdJob->runId);
+    }
+
     public function testCreateInvalidJob(): void
     {
         $client = new Client(
