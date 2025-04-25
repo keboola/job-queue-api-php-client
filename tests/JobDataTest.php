@@ -22,6 +22,7 @@ class JobDataTest extends TestCase
                 'branchId' => null,
                 'orchestrationJobId' => null,
                 'configData' => [],
+                'parentRunId' => null,
             ],
             $jobData->getArray(),
         );

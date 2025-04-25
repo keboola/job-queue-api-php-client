@@ -29,7 +29,7 @@ var_dump($result['id']);
 - Create a service principal to download the required images and login:
 
     ```bash
-        SERVICE_PRINCIPAL_NAME=[USERNAME]-job-queue-internal-api-pull
+        SERVICE_PRINCIPAL_NAME=[USERNAME]-job-queue-public-api-pull
         ACR_REGISTRY_ID=$(az acr show --name keboolapes --query id --output tsv --subscription c5182964-8dca-42c8-a77a-fa2a3c6946ea)
         SP_PASSWORD=$(az ad sp create-for-rbac --name http://$SERVICE_PRINCIPAL_NAME --scopes $ACR_REGISTRY_ID --role acrpull --query password --output tsv)
         SP_APP_ID=$(az ad sp show --id http://$SERVICE_PRINCIPAL_NAME --query appId --output tsv)    

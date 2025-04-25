@@ -102,6 +102,7 @@ class ClientFunctionalTest extends TestCase
     public function testCreateJobWithParentRunId(): void
     {
         $client = $this->getClient();
+        $parentRunId = $this->getStorageClient()->generateId();
         $createdJob = $client->createJob(new JobData(
             componentId: self::COMPONENT_ID,
             configData: [
@@ -109,13 +110,13 @@ class ClientFunctionalTest extends TestCase
                     'foo' => 'bar',
                 ],
             ],
-            parentRunId: '123456',
+            parentRunId: $parentRunId,
         ));
 
         self::assertNotEmpty($createdJob->id);
-        self::assertEquals('created', $createdJob->status);
-        self::assertEquals('123456', $createdJob->parentRunId);
-        self::assertStringContainsString('123456', $createdJob->runId);
+        self::assertSame('created', $createdJob->status);
+        self::assertSame($parentRunId, $createdJob->parentRunId);
+        self::assertSame($parentRunId . '.' . $createdJob->id, $createdJob->runId);
     }
 
     public function testCreateInvalidJob(): void
