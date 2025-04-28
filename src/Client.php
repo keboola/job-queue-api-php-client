@@ -82,7 +82,11 @@ class Client
     {
         try {
             $jobDataJson = json_encode($jobData->getArray(), JSON_THROW_ON_ERROR);
-            $request = new Request('POST', 'jobs', [], $jobDataJson);
+            $headers = [];
+            if ($jobData->getArray()['parentRunId'] !== null) {
+                $headers['X-KBC-RunId'] = $jobData->getArray()['parentRunId'];
+            }
+            $request = new Request('POST', 'jobs', $headers, $jobDataJson);
         } catch (JsonException $e) {
             throw new JobClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
