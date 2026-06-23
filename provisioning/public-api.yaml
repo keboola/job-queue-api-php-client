@@ -38,8 +38,6 @@ spec:
               memory: "512Mi"
           ports:
             - containerPort: 3312
-          args:
-            - --default-authentication-plugin=mysql_native_password
           volumeMounts:
             - name: initdb
               mountPath: /docker-entrypoint-initdb.d
@@ -119,7 +117,7 @@ spec:
             - name: DATABASE_SSL_CA_PATH
               value: ''
             - name: DATABASE_VERSION
-              value: '8.0'
+              value: '8.4'
             - name: JOB_QUEUE_INTERNAL_API_AUTH_TOKEN
               value: 'ciToken'
           readinessProbe:
