@@ -79,6 +79,14 @@ class JobTest extends TestCase
         self::assertFalse($job->isSuccess());
     }
 
+    public function testFromResponseData(): void
+    {
+        $job = Job::fromResponseData($this->validJobData);
+        self::assertSame('3861921', $job->id);
+        self::assertSame('3861921', $job->runId);
+        self::assertFalse($job->isFinished);
+    }
+
     public function invalidJobDataProvider(): Generator
     {
         yield 'missing base fields' => [

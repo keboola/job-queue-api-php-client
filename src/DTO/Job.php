@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\DTO;
 
 use DateTimeImmutable;
+use Keboola\ApiClientBase\ResponseModelInterface;
 use Keboola\JobQueueClient\JobStatuses;
 
-readonly class Job
+final readonly class Job implements ResponseModelInterface
 {
     private function __construct(
         public string $id,
@@ -53,41 +54,46 @@ readonly class Job
 
     public static function fromApiResponse(array $response): self
     {
+        return self::fromResponseData($response);
+    }
+
+    public static function fromResponseData(array $data): static
+    {
         return new self(
-            id: $response['id'],
-            runId: $response['runId'],
-            parentRunId: $response['parentRunId'],
-            project: Project::fromApiResponse($response['project']),
-            token: Token::fromApiResponse($response['token']),
-            status: $response['status'],
-            desiredStatus: $response['desiredStatus'],
-            mode: $response['mode'],
-            component: $response['component'],
-            config: $response['config'],
-            configData: $response['configData'],
-            configRowIds: $response['configRowIds'],
-            tag: $response['tag'],
-            createdTime: new DateTimeImmutable($response['createdTime']),
-            startTime: is_string($response['startTime']) ? new DateTimeImmutable($response['startTime']) : null,
-            endTime: is_string($response['endTime']) ? new DateTimeImmutable($response['endTime']) : null,
-            durationSeconds: $response['durationSeconds'],
-            result: $response['result'],
-            usageData: $response['usageData'],
-            isFinished: $response['isFinished'],
-            url: $response['url'],
-            branchId: $response['branchId'],
-            variableValuesId: $response['variableValuesId'],
-            variableValuesData: VariableValuesData::fromApiResponse($response['variableValuesData']),
-            backend: Backend::fromApiResponse($response['backend']),
-            executor: $response['executor'],
-            metrics: $response['metrics'],
-            behavior: Behavior::fromApiResponse($response['behavior']),
-            parallelism: $response['parallelism'],
-            type: $response['type'],
-            orchestrationJobId: $response['orchestrationJobId'],
-            orchestrationTaskId: $response['orchestrationTaskId'],
-            onlyOrchestrationTaskIds: $response['onlyOrchestrationTaskIds'],
-            previousJobId: $response['previousJobId'],
+            id: $data['id'],
+            runId: $data['runId'],
+            parentRunId: $data['parentRunId'],
+            project: Project::fromApiResponse($data['project']),
+            token: Token::fromApiResponse($data['token']),
+            status: $data['status'],
+            desiredStatus: $data['desiredStatus'],
+            mode: $data['mode'],
+            component: $data['component'],
+            config: $data['config'],
+            configData: $data['configData'],
+            configRowIds: $data['configRowIds'],
+            tag: $data['tag'],
+            createdTime: new DateTimeImmutable($data['createdTime']),
+            startTime: is_string($data['startTime']) ? new DateTimeImmutable($data['startTime']) : null,
+            endTime: is_string($data['endTime']) ? new DateTimeImmutable($data['endTime']) : null,
+            durationSeconds: $data['durationSeconds'],
+            result: $data['result'],
+            usageData: $data['usageData'],
+            isFinished: $data['isFinished'],
+            url: $data['url'],
+            branchId: $data['branchId'],
+            variableValuesId: $data['variableValuesId'],
+            variableValuesData: VariableValuesData::fromApiResponse($data['variableValuesData']),
+            backend: Backend::fromApiResponse($data['backend']),
+            executor: $data['executor'],
+            metrics: $data['metrics'],
+            behavior: Behavior::fromApiResponse($data['behavior']),
+            parallelism: $data['parallelism'],
+            type: $data['type'],
+            orchestrationJobId: $data['orchestrationJobId'],
+            orchestrationTaskId: $data['orchestrationTaskId'],
+            onlyOrchestrationTaskIds: $data['onlyOrchestrationTaskIds'],
+            previousJobId: $data['previousJobId'],
         );
     }
 
