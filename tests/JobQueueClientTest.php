@@ -368,7 +368,7 @@ class JobQueueClientTest extends TestCase
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
-        self::assertSame('Job Queue PHP Client - test agent', $request->getHeader('User-Agent')[0]);
+        self::assertSame('test agent', $request->getHeader('User-Agent')[0]);
         self::assertTrue($handler->hasInfoThatContains('POST http://example.com/jobs : 200'));
     }
 

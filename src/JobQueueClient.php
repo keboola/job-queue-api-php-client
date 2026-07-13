@@ -45,16 +45,11 @@ class JobQueueClient
         Assert::stringNotEmpty($publicApiUrl, 'Public API URL must be a non-empty string.');
         Assert::stringNotEmpty($storageToken, 'Storage API token must be a non-empty string.');
 
-        $fullUserAgent = self::DEFAULT_USER_AGENT;
-        if ($userAgent !== null && $userAgent !== '') {
-            $fullUserAgent .= ' - ' . $userAgent;
-        }
-
         $this->apiClient = new ApiClient(
             $publicApiUrl,
             new StorageApiTokenAuthenticator($storageToken),
             new ApiClientOptions(
-                userAgent: $fullUserAgent,
+                userAgent: $userAgent ?? self::DEFAULT_USER_AGENT,
                 backoffMaxTries: $backoffMaxTries,
                 connectTimeout: $connectTimeout,
                 requestTimeout: $requestTimeout,
