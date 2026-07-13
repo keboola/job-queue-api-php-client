@@ -29,10 +29,12 @@
         "php": "^8.3",
         "ext-curl": "*",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "^6.3|^7.2",
+        "guzzlehttp/guzzle": "^7.8",
+        "keboola/php-api-client-base": "^1.1",
         "psr/log": "^2.0|^3.0",
         "symfony/config": "^6.0|^7.0",
-        "symfony/validator": "^6.0|^7.0"
+        "symfony/validator": "^6.0|^7.0",
+        "webmozart/assert": "^1.11"
     },
     "require-dev": {
         "infection/infection": "^0.26",
