@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient\Tests;
 
 use DateTimeImmutable;
-use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -137,7 +137,7 @@ class ListJobsOptionsTest extends TestCase
     {
         $jobListOptions = new ListJobsOptions();
 
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Allowed values for "sortOrder" are [asc, desc].');
         $jobListOptions->setSortOrder('left');
     }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Keboola\JobQueueClient;
 
 use DateTimeInterface;
-use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\Exception\JobQueueClientException;
 
 class ListJobsOptions
 {
@@ -367,7 +367,7 @@ class ListJobsOptions
     {
         $allowedValues = [self::SORT_ORDER_ASC, self::SORT_ORDER_DESC];
         if (!in_array($value, $allowedValues)) {
-            throw new ClientException(
+            throw new JobQueueClientException(
                 sprintf('Allowed values for "sortOrder" are [%s].', implode(', ', $allowedValues)),
             );
         }
