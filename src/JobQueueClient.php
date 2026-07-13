@@ -14,7 +14,6 @@ use Keboola\ApiClientBase\Auth\StorageApiTokenAuthenticator;
 use Keboola\ApiClientBase\Json;
 use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\JobQueueClientException;
-use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use SensitiveParameter;
 use Webmozart\Assert\Assert;
@@ -110,11 +109,14 @@ class JobQueueClient
 
     public function getJobsDurationSum(): int
     {
-        $data = $this->decodeResponseBody(
-            $this->apiClient->sendRequest(new Request('GET', 'stats/project')),
+        $response = $this->apiClient->sendRequestAndMapResponse(
+            new Request('GET', 'stats/project'),
+            ArrayResponse::class,
         );
 
         /** @var array{jobs?: array{durationSum?: int|numeric-string}} $data */
+        $data = $response->data;
+
         return (int) ($data['jobs']['durationSum'] ?? 0);
     }
 
@@ -123,9 +125,10 @@ class JobQueueClient
      */
     public function getJobLineage(string $jobId): array
     {
-        return $this->decodeResponseBody(
-            $this->apiClient->sendRequest(new Request('GET', sprintf('job/%s/open-api-lineage', $jobId))),
-        );
+        return $this->apiClient->sendRequestAndMapResponse(
+            new Request('GET', sprintf('job/%s/open-api-lineage', $jobId)),
+            ArrayResponse::class,
+        )->data;
     }
 
     public function waitForJobCompletion(string $jobId): Job
@@ -144,24 +147,5 @@ class JobQueueClient
         } while (!$finished);
 
         return $job;
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    private function decodeResponseBody(ResponseInterface $response): array
-    {
-        $body = $response->getBody()->getContents();
-        try {
-            return Json::decodeArray($body);
-        } catch (JsonException $e) {
-            throw new JobQueueClientException(
-                'Response is not valid JSON: ' . $e->getMessage(),
-                0,
-                $e,
-                $response->getStatusCode(),
-                $body,
-            );
-        }
     }
 }
