@@ -67,12 +67,12 @@ class JobTest extends TestCase
         $this->expectException($expectedExceptionClass);
         $this->expectExceptionMessageMatches($expectedMessage);
         $this->expectExceptionCode($expectedCode);
-        Job::fromApiResponse($invalidData);
+        Job::fromResponseData($invalidData);
     }
 
     public function testCreateValid(): void
     {
-        $job = Job::fromApiResponse($this->validJobData);
+        $job = Job::fromResponseData($this->validJobData);
         self::assertSame('3861921', $job->id);
         self::assertFalse($job->isFinished);
         self::assertFalse($job->isError());

@@ -16,7 +16,7 @@ readonly class Backend
     ) {
     }
 
-    public static function fromApiResponse(array $response): self
+    public static function fromResponseData(array $response): self
     {
         return new self(
             context: $response['context'] ?? null,

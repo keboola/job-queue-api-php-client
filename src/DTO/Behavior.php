@@ -14,7 +14,7 @@ readonly class Behavior
     ) {
     }
 
-    public static function fromApiResponse(array $response): self
+    public static function fromResponseData(array $response): self
     {
         return new self(
             onError: $response['onError'] ?? null,

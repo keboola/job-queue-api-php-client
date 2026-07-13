@@ -14,7 +14,7 @@ class VariableValuesData
     ) {
     }
 
-    public static function fromApiResponse(array $response): self
+    public static function fromResponseData(array $response): self
     {
         return new self(
             values: $response['values'] ?? null,

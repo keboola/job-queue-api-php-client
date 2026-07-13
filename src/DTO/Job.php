@@ -52,19 +52,14 @@ final readonly class Job implements ResponseModelInterface
     ) {
     }
 
-    public static function fromApiResponse(array $response): self
-    {
-        return self::fromResponseData($response);
-    }
-
     public static function fromResponseData(array $data): static
     {
         return new self(
             id: $data['id'],
             runId: $data['runId'],
             parentRunId: $data['parentRunId'],
-            project: Project::fromApiResponse($data['project']),
-            token: Token::fromApiResponse($data['token']),
+            project: Project::fromResponseData($data['project']),
+            token: Token::fromResponseData($data['token']),
             status: $data['status'],
             desiredStatus: $data['desiredStatus'],
             mode: $data['mode'],
@@ -83,11 +78,11 @@ final readonly class Job implements ResponseModelInterface
             url: $data['url'],
             branchId: $data['branchId'],
             variableValuesId: $data['variableValuesId'],
-            variableValuesData: VariableValuesData::fromApiResponse($data['variableValuesData']),
-            backend: Backend::fromApiResponse($data['backend']),
+            variableValuesData: VariableValuesData::fromResponseData($data['variableValuesData']),
+            backend: Backend::fromResponseData($data['backend']),
             executor: $data['executor'],
             metrics: $data['metrics'],
-            behavior: Behavior::fromApiResponse($data['behavior']),
+            behavior: Behavior::fromResponseData($data['behavior']),
             parallelism: $data['parallelism'],
             type: $data['type'],
             orchestrationJobId: $data['orchestrationJobId'],
