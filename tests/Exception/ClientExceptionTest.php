@@ -53,6 +53,30 @@ class ClientExceptionTest extends TestCase
         self::assertSame('123', $exception->getErrorCode());
     }
 
+    public function testGetErrorCodeNullWhenNoBody(): void
+    {
+        self::assertNull((new ClientException('m'))->getErrorCode());
+    }
+
+    public function testGetErrorCodeNullWhenContextNotArray(): void
+    {
+        $exception = new ClientException('m', 0, null, 400, '{"context":"oops"}');
+        self::assertNull($exception->getErrorCode());
+        self::assertFalse($exception->isErrorCode('x'));
+    }
+
+    public function testGetErrorCodeNullWhenErrorCodeIsArray(): void
+    {
+        $exception = new ClientException('m', 0, null, 400, '{"context":{"errorCode":[1,2]}}');
+        self::assertNull($exception->getErrorCode());
+    }
+
+    public function testGetErrorCodeNullWhenErrorCodeIsObject(): void
+    {
+        $exception = new ClientException('m', 0, null, 400, '{"context":{"errorCode":{"x":1}}}');
+        self::assertNull($exception->getErrorCode());
+    }
+
     public function testIsErrorCode(): void
     {
         self::assertFalse((new ClientException('m', 0, null, 400, '{}'))->isErrorCode('some.error'));
