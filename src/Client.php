@@ -65,14 +65,14 @@ class Client
 
     public function createJob(JobData $jobData): Job
     {
+        $jobDataArray = $jobData->getArray();
         try {
-            $body = Json::encodeArray($jobData->getArray());
+            $body = Json::encodeArray($jobDataArray);
         } catch (JsonException $e) {
             throw new ClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
 
         $headers = ['Content-Type' => 'application/json'];
-        $jobDataArray = $jobData->getArray();
         if ($jobDataArray['parentRunId'] !== null) {
             $headers['X-KBC-RunId'] = (string) $jobDataArray['parentRunId'];
         }
