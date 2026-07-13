@@ -8,7 +8,7 @@ use JsonException;
 use Keboola\ApiClientBase\Exception\ClientException as BaseClientException;
 use Keboola\ApiClientBase\Json;
 
-class ClientException extends BaseClientException
+class JobQueueClientException extends BaseClientException
 {
     public function getResponseData(): ?array
     {

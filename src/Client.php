@@ -13,7 +13,7 @@ use Keboola\ApiClientBase\ApiClientOptions;
 use Keboola\ApiClientBase\Auth\StorageApiTokenAuthenticator;
 use Keboola\ApiClientBase\Json;
 use Keboola\JobQueueClient\DTO\Job;
-use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use SensitiveParameter;
@@ -61,7 +61,7 @@ class Client
                 requestHandler: $requestHandler,
                 logger: $logger,
             ),
-            exceptionClass: ClientException::class,
+            exceptionClass: JobQueueClientException::class,
         );
     }
 
@@ -71,7 +71,7 @@ class Client
         try {
             $body = Json::encodeArray($jobDataArray);
         } catch (JsonException $e) {
-            throw new ClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new JobQueueClientException('Invalid job data: ' . $e->getMessage(), $e->getCode(), $e);
         }
 
         $headers = ['Content-Type' => 'application/json'];
@@ -160,7 +160,7 @@ class Client
         try {
             return Json::decodeArray($body);
         } catch (JsonException $e) {
-            throw new ClientException(
+            throw new JobQueueClientException(
                 'Response is not valid JSON: ' . $e->getMessage(),
                 0,
                 $e,
