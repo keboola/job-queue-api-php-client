@@ -13,6 +13,7 @@ use Keboola\ApiClientBase\ApiClientOptions;
 use Keboola\ApiClientBase\Auth\StorageApiTokenAuthenticator;
 use Keboola\ApiClientBase\Json;
 use Keboola\JobQueueClient\DTO\Job;
+use Keboola\JobQueueClient\DTO\ProjectStats;
 use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Psr\Log\LoggerInterface;
 use SensitiveParameter;
@@ -109,15 +110,10 @@ class JobQueueClient
 
     public function getJobsDurationSum(): int
     {
-        $response = $this->apiClient->sendRequestAndMapResponse(
+        return $this->apiClient->sendRequestAndMapResponse(
             new Request('GET', 'stats/project'),
-            ArrayResponse::class,
-        );
-
-        /** @var array{jobs?: array{durationSum?: int|numeric-string}} $data */
-        $data = $response->data;
-
-        return (int) ($data['jobs']['durationSum'] ?? 0);
+            ProjectStats::class,
+        )->jobsDurationSum;
     }
 
     /**
