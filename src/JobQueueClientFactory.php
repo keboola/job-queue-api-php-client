@@ -6,6 +6,7 @@ namespace Keboola\JobQueueClient;
 
 use Keboola\JobQueueClient\Client;
 use SensitiveParameter;
+use Webmozart\Assert\Assert;
 
 class JobQueueClientFactory
 {
@@ -17,6 +18,9 @@ class JobQueueClientFactory
 
     public function createClientFromToken(#[SensitiveParameter] string $token): Client
     {
+        Assert::stringNotEmpty($this->publicApiUrl, 'Public API URL must be a non-empty string.');
+        Assert::stringNotEmpty($token, 'Storage API token must be a non-empty string.');
+
         return new Client(
             $this->publicApiUrl,
             $token,

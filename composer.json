@@ -40,6 +40,7 @@
         "keboola/settle": "^1.0",
         "keboola/storage-api-client": "^18.0",
         "phpstan/phpstan": "^1.4",
+        "phpstan/phpstan-webmozart-assert": "^1.2",
         "phpunit/phpunit": "^9.5",
         "symfony/dotenv": "^6.0"
     },

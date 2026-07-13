@@ -19,6 +19,7 @@ use Keboola\StorageApi\Options\Components\Configuration;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 class ClientFunctionalTest extends TestCase
 {
@@ -28,9 +29,14 @@ class ClientFunctionalTest extends TestCase
 
     private function getClient(): Client
     {
+        $publicApiUrl = (string) getenv('public_queue_api_url');
+        $storageApiToken = (string) getenv('test_storage_api_token');
+        Assert::stringNotEmpty($publicApiUrl, 'Public API URL must be a non-empty string.');
+        Assert::stringNotEmpty($storageApiToken, 'Storage API token must be a non-empty string.');
+
         return new Client(
-            (string) getenv('public_queue_api_url'),
-            (string) getenv('test_storage_api_token'),
+            $publicApiUrl,
+            $storageApiToken,
         );
     }
 
@@ -120,8 +126,11 @@ class ClientFunctionalTest extends TestCase
 
     public function testCreateInvalidJob(): void
     {
+        $publicApiUrl = (string) getenv('public_queue_api_url');
+        Assert::stringNotEmpty($publicApiUrl, 'Public API URL must be a non-empty string.');
+
         $client = new Client(
-            (string) getenv('public_queue_api_url'),
+            $publicApiUrl,
             'invalid',
         );
         self::expectException(ClientException::class);

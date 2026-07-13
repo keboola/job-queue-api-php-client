@@ -49,12 +49,14 @@ class ClientTest extends TestCase
     public function testCreateClientEmptyToken(): void
     {
         $this->expectException(InvalidArgumentException::class);
+        // @phpstan-ignore argument.type
         new Client('http://example.com/', '');
     }
 
     public function testCreateClientEmptyUrl(): void
     {
         $this->expectException(InvalidArgumentException::class);
+        // @phpstan-ignore argument.type
         new Client('', 'testToken');
     }
 

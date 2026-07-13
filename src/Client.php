@@ -28,6 +28,8 @@ class Client
     private readonly ApiClient $apiClient;
 
     /**
+     * @param non-empty-string $publicApiUrl
+     * @param non-empty-string $storageToken
      * @param int<0, max> $backoffMaxTries
      */
     public function __construct(
