@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 use SensitiveParameter;
 use Webmozart\Assert\Assert;
 
-class Client
+class JobQueueClient
 {
     private const DEFAULT_USER_AGENT = 'Job Queue PHP Client';
     private const DEFAULT_BACKOFF_MAX_TRIES = 3;

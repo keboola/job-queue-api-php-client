@@ -6,9 +6,9 @@ namespace Keboola\JobQueueClient\Tests;
 
 use DateTime;
 use Generator;
-use Keboola\JobQueueClient\Client;
+use Keboola\JobQueueClient\JobQueueClient;
 use Keboola\JobQueueClient\DTO\Job;
-use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -21,20 +21,20 @@ use PHPUnit\Framework\TestCase;
 use Throwable;
 use Webmozart\Assert\Assert;
 
-class ClientFunctionalTest extends TestCase
+class JobQueueClientFunctionalTest extends TestCase
 {
     private const COMPONENT_ID = 'keboola.ex-db-snowflake';
     private const COMPONENT_ID_2 = 'keboola.ex-db-mysql';
     private const COMPONENT_ID_3 = 'keboola.ex-db-pgsql';
 
-    private function getClient(): Client
+    private function getClient(): JobQueueClient
     {
         $publicApiUrl = (string) getenv('public_queue_api_url');
         $storageApiToken = (string) getenv('test_storage_api_token');
         Assert::stringNotEmpty($publicApiUrl, 'Public API URL must be a non-empty string.');
         Assert::stringNotEmpty($storageApiToken, 'Storage API token must be a non-empty string.');
 
-        return new Client(
+        return new JobQueueClient(
             $publicApiUrl,
             $storageApiToken,
         );
@@ -129,11 +129,11 @@ class ClientFunctionalTest extends TestCase
         $publicApiUrl = (string) getenv('public_queue_api_url');
         Assert::stringNotEmpty($publicApiUrl, 'Public API URL must be a non-empty string.');
 
-        $client = new Client(
+        $client = new JobQueueClient(
             $publicApiUrl,
             'invalid',
         );
-        self::expectException(ClientException::class);
+        self::expectException(JobQueueClientException::class);
         self::expectExceptionMessage('Invalid access token');
         $client->createJob(new JobData('foo', '', []));
     }

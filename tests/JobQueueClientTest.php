@@ -13,8 +13,8 @@ use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use InvalidArgumentException;
-use Keboola\JobQueueClient\Client;
-use Keboola\JobQueueClient\Exception\ClientException;
+use Keboola\JobQueueClient\JobQueueClient;
+use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use stdClass;
 
-class ClientTest extends TestCase
+class JobQueueClientTest extends TestCase
 {
     /**
      * @param array{
@@ -34,9 +34,9 @@ class ClientTest extends TestCase
      *     logger?: \Psr\Log\LoggerInterface,
      * } $options
      */
-    private function getClient(array $options = []): Client
+    private function getClient(array $options = []): JobQueueClient
     {
-        return new Client(
+        return new JobQueueClient(
             'http://example.com/',
             'testToken',
             logger: $options['logger'] ?? null,
@@ -50,14 +50,14 @@ class ClientTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         // @phpstan-ignore argument.type
-        new Client('http://example.com/', '');
+        new JobQueueClient('http://example.com/', '');
     }
 
     public function testCreateClientEmptyUrl(): void
     {
         $this->expectException(InvalidArgumentException::class);
         // @phpstan-ignore argument.type
-        new Client('', 'testToken');
+        new JobQueueClient('', 'testToken');
     }
 
     public function testClientRequestResponse(): void
@@ -130,7 +130,7 @@ class ClientTest extends TestCase
     public function testInvalidRequest(): void
     {
         $client = $this->getClient([]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Invalid job data: Type is not supported');
         $res = fopen(sys_get_temp_dir() . '/touch', 'w');
         $client->createJob(new JobData('keboola.ex-db-storage', '123', ['foo' => $res]));
@@ -151,7 +151,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Response is not valid JSON: Syntax error');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -171,7 +171,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -191,7 +191,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->getJob('123');
     }
@@ -211,7 +211,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->terminateJob('123');
     }
@@ -231,7 +231,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->listJobs(new ListJobsOptions());
     }
@@ -248,7 +248,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $requestHandler, 'backoffMaxTries' => 0]);
 
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Error on server');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -265,7 +265,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $requestHandler]);
 
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Response is not valid JSON: Syntax error');
         $this->expectExceptionCode(0);
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
@@ -283,7 +283,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $requestHandler]);
 
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('400 Bad Request');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -307,7 +307,7 @@ class ClientTest extends TestCase
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Expected ClientException');
-        } catch (ClientException $e) {
+        } catch (JobQueueClientException $e) {
             self::assertTrue($e->isErrorCode('some.error'));
         }
     }
@@ -466,7 +466,7 @@ class ClientTest extends TestCase
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Must throw exception');
-        } catch (ClientException $e) {
+        } catch (JobQueueClientException $e) {
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
         }
         self::assertCount(4, $requestHistory);
@@ -492,7 +492,7 @@ class ClientTest extends TestCase
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
             self::fail('Must throw exception');
-        } catch (ClientException $e) {
+        } catch (JobQueueClientException $e) {
             self::assertStringContainsString('500 Internal Server Error', $e->getMessage());
         }
         self::assertCount(4, $requestHistory);
@@ -513,7 +513,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('Unauthorized');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -835,7 +835,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
-        $this->expectException(ClientException::class);
+        $this->expectException(JobQueueClientException::class);
         $this->expectExceptionMessage('API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer');
         $client->createJob(new JobData('dummy'));
     }
