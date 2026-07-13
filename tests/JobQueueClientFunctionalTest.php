@@ -6,10 +6,10 @@ namespace Keboola\JobQueueClient\Tests;
 
 use DateTime;
 use Generator;
-use Keboola\JobQueueClient\JobQueueClient;
 use Keboola\JobQueueClient\DTO\Job;
 use Keboola\JobQueueClient\Exception\JobQueueClientException;
 use Keboola\JobQueueClient\JobData;
+use Keboola\JobQueueClient\JobQueueClient;
 use Keboola\JobQueueClient\JobStatuses;
 use Keboola\JobQueueClient\ListJobsOptions;
 use Keboola\Settle\SettleFactory;
