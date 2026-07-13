@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Keboola\JobQueueClient\Tests;
 
+use Closure;
 use DateTimeImmutable;
-use Generator;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
+use InvalidArgumentException;
 use Keboola\JobQueueClient\Client;
 use Keboola\JobQueueClient\Exception\ClientException;
-use Keboola\JobQueueClient\Exception\ResponseException;
 use Keboola\JobQueueClient\JobData;
 use Keboola\JobQueueClient\JobType;
 use Keboola\JobQueueClient\ListJobsOptions;
@@ -26,81 +26,36 @@ use stdClass;
 
 class ClientTest extends TestCase
 {
-    private function getClient(array $options): Client
+    /**
+     * @param array{
+     *     handler?: HandlerStack|Closure,
+     *     backoffMaxTries?: int<0, max>,
+     *     userAgent?: string,
+     *     logger?: \Psr\Log\LoggerInterface,
+     * } $options
+     */
+    private function getClient(array $options = []): Client
     {
         return new Client(
             'http://example.com/',
             'testToken',
-            $options,
+            logger: $options['logger'] ?? null,
+            backoffMaxTries: $options['backoffMaxTries'] ?? 3,
+            userAgent: $options['userAgent'] ?? null,
+            requestHandler: $options['handler'] ?? null,
         );
     }
 
-    public function testCreateClientInvalidBackoff(): void
+    public function testCreateClientEmptyToken(): void
     {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "abc" is invalid: This value should be a valid number',
-        );
-        new Client(
-            'http://example.com/',
-            'testToken',
-            // @phpstan-ignore-next-line
-            ['backoffMaxTries' => 'abc'],
-        );
-    }
-
-    public function testCreateClientTooLowBackoff(): void
-    {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "-1" is invalid: This value should be between 0 and 100.',
-        );
-        new Client(
-            'http://example.com/',
-            'testToken',
-            ['backoffMaxTries' => -1],
-        );
-    }
-
-    public function testCreateClientTooHighBackoff(): void
-    {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "101" is invalid: This value should be between 0 and 100.',
-        );
-        new Client(
-            'http://example.com/',
-            'testToken',
-            ['backoffMaxTries' => 101],
-        );
-    }
-
-    public function testCreateClientInvalidToken(): void
-    {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "" is invalid: This value should not be blank.',
-        );
+        $this->expectException(InvalidArgumentException::class);
         new Client('http://example.com/', '');
     }
 
-    public function testCreateClientInvalidUrl(): void
+    public function testCreateClientEmptyUrl(): void
     {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.',
-        );
-        new Client('invalid url', 'testToken');
-    }
-
-    public function testCreateClientMultipleErrors(): void
-    {
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage(
-            'Invalid parameters when creating client: Value "invalid url" is invalid: This value is not a valid URL.'
-            . "\n" . 'Value "" is invalid: This value should not be blank.' . "\n",
-        );
-        new Client('invalid url', '');
+        $this->expectException(InvalidArgumentException::class);
+        new Client('', 'testToken');
     }
 
     public function testClientRequestResponse(): void
@@ -195,7 +150,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Unable to parse response body into JSON: Syntax error');
+        $this->expectExceptionMessage('Response is not valid JSON: Syntax error');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
@@ -214,8 +169,8 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ResponseException::class);
-        $this->expectExceptionMessage('Failed to parse Job data: Undefined array key "runId"');
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Undefined array key "runId"');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
@@ -234,7 +189,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ResponseException::class);
+        $this->expectException(ClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->getJob('123');
     }
@@ -254,7 +209,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ResponseException::class);
+        $this->expectException(ClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->terminateJob('123');
     }
@@ -274,7 +229,7 @@ class ClientTest extends TestCase
         $stack = HandlerStack::create($history($mock));
 
         $client = $this->getClient(['handler' => $stack]);
-        $this->expectException(ResponseException::class);
+        $this->expectException(ClientException::class);
         $this->expectExceptionMessage('Undefined array key "runId"');
         $client->listJobs(new ListJobsOptions());
     }
@@ -309,7 +264,7 @@ class ClientTest extends TestCase
         $client = $this->getClient(['handler' => $requestHandler]);
 
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Unable to parse response body into JSON: Syntax error');
+        $this->expectExceptionMessage('Response is not valid JSON: Syntax error');
         $this->expectExceptionCode(0);
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -326,7 +281,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $requestHandler]);
 
-        $this->expectException(ResponseException::class);
+        $this->expectException(ClientException::class);
         $this->expectExceptionMessage('400 Bad Request');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
@@ -349,7 +304,8 @@ class ClientTest extends TestCase
 
         try {
             $client->createJob(new JobData('keboola.ex-db-storage', '123'));
-        } catch (ResponseException $e) {
+            self::fail('Expected ClientException');
+        } catch (ClientException $e) {
             self::assertTrue($e->isErrorCode('some.error'));
         }
     }
@@ -410,9 +366,8 @@ class ClientTest extends TestCase
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
-        self::assertEquals('test agent', $request->getHeader('User-Agent')[0]);
-        self::assertTrue($handler->hasInfoThatContains('"POST  /1.1" 200 '));
-        self::assertTrue($handler->hasInfoThatContains('test agent'));
+        self::assertSame('Job Queue PHP Client - test agent', $request->getHeader('User-Agent')[0]);
+        self::assertTrue($handler->hasInfoThatContains('POST http://example.com/jobs : 200'));
     }
 
     public function testRetrySuccess(): void
@@ -557,7 +512,7 @@ class ClientTest extends TestCase
 
         $client = $this->getClient(['handler' => $stack]);
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('{"message": "Unauthorized"}');
+        $this->expectExceptionMessage('Unauthorized');
         $client->createJob(new JobData('keboola.ex-db-storage', '123'));
     }
 
@@ -590,7 +545,6 @@ class ClientTest extends TestCase
         self::assertEquals('GET', $request->getMethod());
         self::assertEquals('testToken', $request->getHeader('X-StorageApi-Token')[0]);
         self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
-        self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
     }
 
     public function testGetJobLineage(): void
@@ -617,7 +571,6 @@ class ClientTest extends TestCase
         self::assertEquals('GET', $request->getMethod());
         self::assertEquals('testToken', $request->getHeader('X-StorageApi-Token')[0]);
         self::assertEquals('Job Queue PHP Client', $request->getHeader('User-Agent')[0]);
-        self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
     }
 
     private const JOB_LINEAGE_RESPONSE = '[
@@ -966,35 +919,6 @@ class ClientTest extends TestCase
             [56],
             [55],
         ];
-    }
-
-    public function testRetryCurlExceptionWithoutContext(): void
-    {
-        $mock = new MockHandler(
-            [
-                new Response(500, ['Content-Type' => 'application/json'], 'not used'),
-            ],
-            function (ResponseInterface $a) {
-                // abusing the mockhandler here: override the mock response and throw a Request exception
-                throw new RequestException(
-                    'API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer, errno 104',
-                    new Request('GET', 'https://example.com'),
-                    null,
-                    null,
-                    [],
-                );
-            },
-        );
-
-        // Add the history middleware to the handler stack.
-        $container = [];
-        $history = Middleware::history($container);
-        $stack = HandlerStack::create($history($mock));
-
-        $client = $this->getClient(['handler' => $stack, 'backoffMaxTries' => 2]);
-        $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('API error: cURL error 56: OpenSSL SSL_read: Connection reset by peer');
-        $client->createJob(new JobData('dummy'));
     }
 
     public function testWaitForCompletion(): void

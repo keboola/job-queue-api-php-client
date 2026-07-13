@@ -26,12 +26,11 @@ class ClientFunctionalTest extends TestCase
     private const COMPONENT_ID_2 = 'keboola.ex-db-mysql';
     private const COMPONENT_ID_3 = 'keboola.ex-db-pgsql';
 
-    private function getClient(array $options = []): Client
+    private function getClient(): Client
     {
         return new Client(
             (string) getenv('public_queue_api_url'),
             (string) getenv('test_storage_api_token'),
-            $options,
         );
     }
 

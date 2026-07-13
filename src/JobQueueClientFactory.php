@@ -20,7 +20,7 @@ class JobQueueClientFactory
         return new Client(
             $this->publicApiUrl,
             $token,
-            ['userAgent' => $this->userAgent],
+            userAgent: $this->userAgent,
         );
     }
 }
