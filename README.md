@@ -8,21 +8,20 @@ composer require keboola/job-queue-api-php-client
 ```
 
 ```php
-use Keboola\JobQueueClient\Client;
-use Keboola\JobQueueClient\JobData;use Psr\Log\NullLogger;
+use Keboola\JobQueueClient\JobData;
+use Keboola\JobQueueClient\JobQueueClient;
 
-$client = new Client(
-    new NullLogger(),
-    'http://queue.conenection.keboola.com/',
-    'xxx-xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+$client = new JobQueueClient(
+    'https://queue.connection.keboola.com/',
+    'xxx-xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
 );
-$result = $client->createJob(new JobData(
+$job = $client->createJob(new JobData(
     'keboola.ex-db-snowflake',
     '123',
     [],
-    'run'
+    'run',
 ));
-var_dump($result['id']);
+echo $job->id;
 ```
 
 ## Development
