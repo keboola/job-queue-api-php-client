@@ -369,7 +369,7 @@ class JobQueueClientTest extends TestCase
         /** @var Request $request */
         $request = $requestHistory[0]['request'];
         self::assertSame('test agent', $request->getHeader('User-Agent')[0]);
-        self::assertTrue($handler->hasInfoThatContains('POST http://example.com/jobs : 200'));
+        self::assertTrue($handler->hasDebugThatContains('POST http://example.com/jobs : 200'));
     }
 
     public function testRetrySuccess(): void
