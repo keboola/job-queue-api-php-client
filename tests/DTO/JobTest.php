@@ -87,6 +87,30 @@ class JobTest extends TestCase
         self::assertFalse($job->isFinished);
     }
 
+    public function testOnlyFlowTaskIdsIsMappedFromResponse(): void
+    {
+        $jobData = $this->validJobData;
+        $jobData['onlyOrchestrationTaskIds'] = ['11', '22'];
+        $jobData['onlyFlowTaskIds'] = ['11', '22'];
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertSame(['11', '22'], $job->onlyFlowTaskIds);
+        self::assertSame(['11', '22'], $job->onlyOrchestrationTaskIds);
+    }
+
+    public function testOnlyFlowTaskIdsFallsBackToOnlyOrchestrationTaskIds(): void
+    {
+        // response from an older public-api that does not return the onlyFlowTaskIds field yet
+        $jobData = $this->validJobData;
+        $jobData['onlyOrchestrationTaskIds'] = ['11', '22'];
+        self::assertArrayNotHasKey('onlyFlowTaskIds', $jobData);
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertSame(['11', '22'], $job->onlyFlowTaskIds);
+    }
+
     public function invalidJobDataProvider(): Generator
     {
         yield 'missing base fields' => [

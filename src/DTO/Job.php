@@ -47,7 +47,9 @@ final readonly class Job implements ResponseModelInterface
         public string $type,
         public ?string $orchestrationJobId,
         public ?string $orchestrationTaskId,
+        /** @deprecated Use $onlyFlowTaskIds */
         public ?array $onlyOrchestrationTaskIds,
+        public ?array $onlyFlowTaskIds,
         public ?string $previousJobId,
     ) {
     }
@@ -88,6 +90,7 @@ final readonly class Job implements ResponseModelInterface
             orchestrationJobId: $data['orchestrationJobId'],
             orchestrationTaskId: $data['orchestrationTaskId'],
             onlyOrchestrationTaskIds: $data['onlyOrchestrationTaskIds'],
+            onlyFlowTaskIds: $data['onlyFlowTaskIds'] ?? $data['onlyOrchestrationTaskIds'],
             previousJobId: $data['previousJobId'],
         );
     }
