@@ -127,6 +127,130 @@ class JobQueueClientTest extends TestCase
         self::assertEquals('application/json', $request->getHeader('Content-type')[0]);
     }
 
+    public function testCreateJobSendsOnlyFlowTaskIds(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                201,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "id": "683194249",
+                    "runId": "683194249",
+                    "parentRunId": "",
+                    "project": {"id": "123"},
+                    "token": {"id": "456", "description": "my token"},
+                    "status": "created",
+                    "desiredStatus": "processing",
+                    "mode": "run",
+                    "component": "keboola.ex-db-snowflake",
+                    "config": "123",
+                    "configData": {},
+                    "configRowIds": null,
+                    "tag": null,
+                    "createdTime": "2021-03-04T21:59:49+00:00",
+                    "startTime": null,
+                    "endTime": null,
+                    "durationSeconds": 0,
+                    "result": [],
+                    "usageData": [],
+                    "isFinished": false,
+                    "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                    "branchId": "6",
+                    "variableValuesId": null,
+                    "variableValuesData": {"values": []},
+                    "backend": {"context": "18-transformation"},
+                    "executor": "dind",
+                    "metrics": [],
+                    "behavior": {"onError": null},
+                    "parallelism": null,
+                    "type": "standard",
+                    "orchestrationJobId": null,
+                    "orchestrationTaskId": null,
+                    "onlyOrchestrationTaskIds": ["11", "22"],
+                    "onlyFlowTaskIds": ["11", "22"],
+                    "previousJobId": null
+                }',
+            ),
+        ]);
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $job = $client->createJob(new JobData(
+            'keboola.ex-db-storage',
+            '123',
+            onlyFlowTaskIds: ['11', '22'],
+        ));
+
+        self::assertSame(['11', '22'], $job->onlyFlowTaskIds);
+
+        /** @var Request $request */
+        $request = $requestHistory[0]['request'];
+        $requestBody = json_decode($request->getBody()->getContents(), true);
+        self::assertIsArray($requestBody);
+        self::assertSame(['11', '22'], $requestBody['onlyFlowTaskIds']);
+        self::assertArrayNotHasKey('onlyOrchestrationTaskIds', $requestBody);
+    }
+
+    public function testCreateJobWithoutOnlyFlowTaskIdsOmitsTheKey(): void
+    {
+        $mock = new MockHandler([
+            new Response(
+                201,
+                ['Content-Type' => 'application/json'],
+                '{
+                    "id": "683194249",
+                    "runId": "683194249",
+                    "parentRunId": "",
+                    "project": {"id": "123"},
+                    "token": {"id": "456", "description": "my token"},
+                    "status": "created",
+                    "desiredStatus": "processing",
+                    "mode": "run",
+                    "component": "keboola.ex-db-snowflake",
+                    "config": "123",
+                    "configData": {},
+                    "configRowIds": null,
+                    "tag": null,
+                    "createdTime": "2021-03-04T21:59:49+00:00",
+                    "startTime": null,
+                    "endTime": null,
+                    "durationSeconds": 0,
+                    "result": [],
+                    "usageData": [],
+                    "isFinished": false,
+                    "url": "https://queue.east-us-2.azure.keboola-testing.com/jobs/683194249",
+                    "branchId": "6",
+                    "variableValuesId": null,
+                    "variableValuesData": {"values": []},
+                    "backend": {"context": "18-transformation"},
+                    "executor": "dind",
+                    "metrics": [],
+                    "behavior": {"onError": null},
+                    "parallelism": null,
+                    "type": "standard",
+                    "orchestrationJobId": null,
+                    "orchestrationTaskId": null,
+                    "onlyOrchestrationTaskIds": null,
+                    "previousJobId": null
+                }',
+            ),
+        ]);
+        $requestHistory = [];
+        $history = Middleware::history($requestHistory);
+        $stack = HandlerStack::create($history($mock));
+
+        $client = $this->getClient(['handler' => $stack]);
+        $client->createJob(new JobData('keboola.ex-db-storage', '123'));
+
+        /** @var Request $request */
+        $request = $requestHistory[0]['request'];
+        $requestBody = json_decode($request->getBody()->getContents(), true);
+        self::assertIsArray($requestBody);
+        self::assertArrayNotHasKey('onlyFlowTaskIds', $requestBody);
+    }
+
     public function testInvalidRequest(): void
     {
         $client = $this->getClient([]);

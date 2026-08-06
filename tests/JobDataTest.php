@@ -40,6 +40,7 @@ class JobDataTest extends TestCase
             '123',
             '123456',
             '67890',
+            ['11', '22'],
         );
 
         self::assertEquals(
@@ -53,6 +54,7 @@ class JobDataTest extends TestCase
                 'orchestrationJobId' => '123456',
                 'parentRunId' => '67890',
                 'configData' => ['foo' => 'bar'],
+                'onlyFlowTaskIds' => ['11', '22'],
             ],
             $jobData->getArray(),
         );

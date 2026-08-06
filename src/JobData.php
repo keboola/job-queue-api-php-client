@@ -15,6 +15,7 @@ class JobData
     private ?string $branchId;
     private ?string $orchestrationJobId;
     private ?string $parentRunId;
+    private ?array $onlyFlowTaskIds;
 
     public function __construct(
         string $componentId,
@@ -26,6 +27,7 @@ class JobData
         ?string $branchId = null,
         ?string $orchestrationJobId = null,
         ?string $parentRunId = null,
+        ?array $onlyFlowTaskIds = null,
     ) {
         $this->componentId = $componentId;
         $this->configId = $configId;
@@ -36,11 +38,12 @@ class JobData
         $this->branchId = $branchId;
         $this->orchestrationJobId = $orchestrationJobId;
         $this->parentRunId = $parentRunId;
+        $this->onlyFlowTaskIds = $onlyFlowTaskIds;
     }
 
     public function getArray(): array
     {
-        return [
+        $data = [
             'component' => $this->componentId,
             'config' => $this->configId,
             'mode' => $this->mode,
@@ -51,5 +54,11 @@ class JobData
             'parentRunId' => $this->parentRunId,
             'configData' => $this->configData,
         ];
+
+        if ($this->onlyFlowTaskIds !== null) {
+            $data['onlyFlowTaskIds'] = $this->onlyFlowTaskIds;
+        }
+
+        return $data;
     }
 }
