@@ -6,6 +6,7 @@ namespace Keboola\JobQueueClient\Tests\DTO;
 
 use Generator;
 use Keboola\JobQueueClient\DTO\Job;
+use Keboola\JobQueueClient\JobOutcome;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 use TypeError;
@@ -38,6 +39,7 @@ class JobTest extends TestCase
         'result' => [],
         'usageData' => [],
         'isFinished' => false,
+        'outcome' => null,
         'url' => 'https://queue.east-us-2.azure.keboola-testing.com/jobs/3861921',
         'branchId' => '6',
         'variableValuesId' => null,
@@ -77,6 +79,41 @@ class JobTest extends TestCase
         self::assertFalse($job->isFinished);
         self::assertFalse($job->isError());
         self::assertFalse($job->isSuccess());
+        self::assertNull($job->outcome);
+    }
+
+    /** @dataProvider outcomeProvider */
+    public function testOutcomeIsMappedFromResponse(string $status, ?string $outcome, ?JobOutcome $expected): void
+    {
+        $jobData = $this->validJobData;
+        $jobData['status'] = $status;
+        $jobData['isFinished'] = $outcome !== null;
+        $jobData['outcome'] = $outcome;
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertSame($expected, $job->outcome);
+    }
+
+    public function outcomeProvider(): Generator
+    {
+        yield 'success' => ['status' => 'success', 'outcome' => 'success', 'expected' => JobOutcome::SUCCESS];
+        yield 'warning' => ['status' => 'warning', 'outcome' => 'success', 'expected' => JobOutcome::SUCCESS];
+        yield 'error' => ['status' => 'error', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
+        yield 'cancelled' => ['status' => 'cancelled', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
+        yield 'terminated' => ['status' => 'terminated', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
+        yield 'processing' => ['status' => 'processing', 'outcome' => null, 'expected' => null];
+    }
+
+    public function testOutcomeIsNullOnAResponseWithoutTheField(): void
+    {
+        // response from an older public-api that does not return the outcome field yet
+        $jobData = $this->validJobData;
+        unset($jobData['outcome']);
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertNull($job->outcome);
     }
 
     public function testFromResponseData(): void

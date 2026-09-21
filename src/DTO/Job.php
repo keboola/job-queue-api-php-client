@@ -6,6 +6,7 @@ namespace Keboola\JobQueueClient\DTO;
 
 use DateTimeImmutable;
 use Keboola\ApiClientBase\ResponseModelInterface;
+use Keboola\JobQueueClient\JobOutcome;
 use Keboola\JobQueueClient\JobStatuses;
 
 final readonly class Job implements ResponseModelInterface
@@ -34,6 +35,13 @@ final readonly class Job implements ResponseModelInterface
         public ?array $result,
         public ?array $usageData,
         public bool $isFinished,
+        /**
+         * Whether a finished job delivered what it was asked to do.
+         *
+         * - `null` exactly while `$isFinished` is `false`, and on a response from an API older
+         *   than the field.
+         */
+        public ?JobOutcome $outcome,
         public string $url,
         public ?string $branchId,
         public ?string $variableValuesId,
@@ -77,6 +85,7 @@ final readonly class Job implements ResponseModelInterface
             result: $data['result'],
             usageData: $data['usageData'],
             isFinished: $data['isFinished'],
+            outcome: isset($data['outcome']) ? JobOutcome::from($data['outcome']) : null,
             url: $data['url'],
             branchId: $data['branchId'],
             variableValuesId: $data['variableValuesId'],
@@ -95,11 +104,24 @@ final readonly class Job implements ResponseModelInterface
         );
     }
 
+    /**
+     * @deprecated Use `$outcome === JobOutcome::SUCCESS`.
+     *
+     * - Answers `false` for `warning`, which the API counts as a success, and for `cancelled` and
+     *   `terminated`, which it counts as failures.
+     * - Kept as it is: callers depend on the strict `success` test.
+     */
     public function isSuccess(): bool
     {
         return $this->status === JobStatuses::SUCCESS->value;
     }
 
+    /**
+     * @deprecated Use `$outcome === JobOutcome::FAILURE`.
+     *
+     * - Answers `false` for `cancelled` and `terminated`, which the API counts as failures.
+     * - Kept as it is: callers depend on the strict `error` test.
+     */
     public function isError(): bool
     {
         return $this->status === JobStatuses::ERROR->value;
