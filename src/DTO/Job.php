@@ -108,9 +108,7 @@ final readonly class Job implements ResponseModelInterface
     /**
      * @deprecated Use `$outcome === JobOutcome::SUCCESS`.
      *
-     * - Answers `false` for `warning`, which the API counts as a success, and for `cancelled` and
-     *   `terminated`, which it counts as failures.
-     * - Kept as it is: callers depend on the strict `success` test.
+     * - Strictly `status === success`, so it differs from `$outcome`; callers depend on that.
      */
     public function isSuccess(): bool
     {
@@ -120,8 +118,7 @@ final readonly class Job implements ResponseModelInterface
     /**
      * @deprecated Use `$outcome === JobOutcome::FAILURE`.
      *
-     * - Answers `false` for `cancelled` and `terminated`, which the API counts as failures.
-     * - Kept as it is: callers depend on the strict `error` test.
+     * - Strictly `status === error`, so it differs from `$outcome`; callers depend on that.
      */
     public function isError(): bool
     {
