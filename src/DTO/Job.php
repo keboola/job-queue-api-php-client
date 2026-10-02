@@ -38,8 +38,9 @@ final readonly class Job implements ResponseModelInterface
         /**
          * Whether a finished job delivered what it was asked to do.
          *
-         * - `null` exactly while `$isFinished` is `false`, and on a response from an API older
-         *   than the field.
+         * - `null` exactly while `$isFinished` is `false`.
+         * - Also `null` on a response from an API older than the field, or with a value newer than
+         *   this client.
          */
         public ?JobOutcome $outcome,
         public string $url,
@@ -85,7 +86,7 @@ final readonly class Job implements ResponseModelInterface
             result: $data['result'],
             usageData: $data['usageData'],
             isFinished: $data['isFinished'],
-            outcome: isset($data['outcome']) ? JobOutcome::from($data['outcome']) : null,
+            outcome: isset($data['outcome']) ? JobOutcome::tryFrom($data['outcome']) : null,
             url: $data['url'],
             branchId: $data['branchId'],
             variableValuesId: $data['variableValuesId'],

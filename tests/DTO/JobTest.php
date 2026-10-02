@@ -116,6 +116,18 @@ class JobTest extends TestCase
         self::assertNull($job->outcome);
     }
 
+    public function testOutcomeIsNullOnAValueNewerThanTheClient(): void
+    {
+        $jobData = $this->validJobData;
+        $jobData['status'] = 'error';
+        $jobData['isFinished'] = true;
+        $jobData['outcome'] = 'aborted';
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertNull($job->outcome);
+    }
+
     public function testFromResponseData(): void
     {
         $job = Job::fromResponseData($this->validJobData);
