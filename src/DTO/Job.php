@@ -38,8 +38,8 @@ final readonly class Job implements ResponseModelInterface
         /**
          * Whether a finished job delivered what it was asked to do.
          *
-         * - `null` exactly while `$isFinished` is `false`.
-         * - Also `null` on a response from an API older than the field, or with a value newer than
+         * - `null` while `$isFinished` is `false`; use `$isFinished`, not this, to know the job is done.
+         * - Also `null` for a finished job on an API older than the field, or with a value newer than
          *   this client.
          */
         public ?JobOutcome $outcome,
