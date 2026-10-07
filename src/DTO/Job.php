@@ -6,7 +6,6 @@ namespace Keboola\JobQueueClient\DTO;
 
 use DateTimeImmutable;
 use Keboola\ApiClientBase\ResponseModelInterface;
-use Keboola\JobQueueClient\JobOutcome;
 use Keboola\JobQueueClient\JobStatuses;
 
 final readonly class Job implements ResponseModelInterface
@@ -39,10 +38,9 @@ final readonly class Job implements ResponseModelInterface
          * Whether a finished job delivered what it was asked to do.
          *
          * - `null` while `$isFinished` is `false`; use `$isFinished`, not this, to know the job is done.
-         * - Also `null` for a finished job on an API older than the field, or with a value newer than
-         *   this client.
+         * - Also `null` for a finished job on an API older than the field.
          */
-        public ?JobOutcome $outcome,
+        public ?bool $isSuccess,
         public string $url,
         public ?string $branchId,
         public ?string $variableValuesId,
@@ -86,7 +84,7 @@ final readonly class Job implements ResponseModelInterface
             result: $data['result'],
             usageData: $data['usageData'],
             isFinished: $data['isFinished'],
-            outcome: isset($data['outcome']) ? JobOutcome::tryFrom($data['outcome']) : null,
+            isSuccess: $data['isSuccess'] ?? null,
             url: $data['url'],
             branchId: $data['branchId'],
             variableValuesId: $data['variableValuesId'],
@@ -106,9 +104,9 @@ final readonly class Job implements ResponseModelInterface
     }
 
     /**
-     * @deprecated Use `$outcome === JobOutcome::SUCCESS`.
+     * Strictly `status === success`.
      *
-     * - Strictly `status === success`, so it differs from `$outcome`; callers depend on that.
+     * - Narrower than the `$isSuccess` field, which is also `true` for `warning`.
      */
     public function isSuccess(): bool
     {
@@ -116,9 +114,10 @@ final readonly class Job implements ResponseModelInterface
     }
 
     /**
-     * @deprecated Use `$outcome === JobOutcome::FAILURE`.
+     * Strictly `status === error`.
      *
-     * - Strictly `status === error`, so it differs from `$outcome`; callers depend on that.
+     * - A different question from `$isSuccess === false`, which also covers `cancelled` and
+     *   `terminated`.
      */
     public function isError(): bool
     {

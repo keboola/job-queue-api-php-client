@@ -6,7 +6,6 @@ namespace Keboola\JobQueueClient\Tests\DTO;
 
 use Generator;
 use Keboola\JobQueueClient\DTO\Job;
-use Keboola\JobQueueClient\JobOutcome;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 use TypeError;
@@ -39,7 +38,7 @@ class JobTest extends TestCase
         'result' => [],
         'usageData' => [],
         'isFinished' => false,
-        'outcome' => null,
+        'isSuccess' => null,
         'url' => 'https://queue.east-us-2.azure.keboola-testing.com/jobs/3861921',
         'branchId' => '6',
         'variableValuesId' => null,
@@ -79,53 +78,41 @@ class JobTest extends TestCase
         self::assertFalse($job->isFinished);
         self::assertFalse($job->isError());
         self::assertFalse($job->isSuccess());
-        self::assertNull($job->outcome);
+        self::assertNull($job->isSuccess);
     }
 
-    /** @dataProvider outcomeProvider */
-    public function testOutcomeIsMappedFromResponse(string $status, ?string $outcome, ?JobOutcome $expected): void
+    /** @dataProvider isSuccessProvider */
+    public function testIsSuccessIsMappedFromResponse(string $status, ?bool $isSuccess): void
     {
         $jobData = $this->validJobData;
         $jobData['status'] = $status;
-        $jobData['isFinished'] = $outcome !== null;
-        $jobData['outcome'] = $outcome;
+        $jobData['isFinished'] = $isSuccess !== null;
+        $jobData['isSuccess'] = $isSuccess;
 
         $job = Job::fromResponseData($jobData);
 
-        self::assertSame($expected, $job->outcome);
+        self::assertSame($isSuccess, $job->isSuccess);
     }
 
-    public function outcomeProvider(): Generator
+    public function isSuccessProvider(): Generator
     {
-        yield 'success' => ['status' => 'success', 'outcome' => 'success', 'expected' => JobOutcome::SUCCESS];
-        yield 'warning' => ['status' => 'warning', 'outcome' => 'success', 'expected' => JobOutcome::SUCCESS];
-        yield 'error' => ['status' => 'error', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
-        yield 'cancelled' => ['status' => 'cancelled', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
-        yield 'terminated' => ['status' => 'terminated', 'outcome' => 'failure', 'expected' => JobOutcome::FAILURE];
-        yield 'processing' => ['status' => 'processing', 'outcome' => null, 'expected' => null];
+        yield 'success' => ['status' => 'success', 'isSuccess' => true];
+        yield 'warning' => ['status' => 'warning', 'isSuccess' => true];
+        yield 'error' => ['status' => 'error', 'isSuccess' => false];
+        yield 'cancelled' => ['status' => 'cancelled', 'isSuccess' => false];
+        yield 'terminated' => ['status' => 'terminated', 'isSuccess' => false];
+        yield 'processing' => ['status' => 'processing', 'isSuccess' => null];
     }
 
-    public function testOutcomeIsNullOnAResponseWithoutTheField(): void
+    public function testIsSuccessIsNullOnAResponseWithoutTheField(): void
     {
-        // response from an older public-api that does not return the outcome field yet
+        // response from an older public-api that does not return the isSuccess field yet
         $jobData = $this->validJobData;
-        unset($jobData['outcome']);
+        unset($jobData['isSuccess']);
 
         $job = Job::fromResponseData($jobData);
 
-        self::assertNull($job->outcome);
-    }
-
-    public function testOutcomeIsNullOnAValueNewerThanTheClient(): void
-    {
-        $jobData = $this->validJobData;
-        $jobData['status'] = 'error';
-        $jobData['isFinished'] = true;
-        $jobData['outcome'] = 'aborted';
-
-        $job = Job::fromResponseData($jobData);
-
-        self::assertNull($job->outcome);
+        self::assertNull($job->isSuccess);
     }
 
     public function testFromResponseData(): void
