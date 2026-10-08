@@ -94,7 +94,7 @@ class JobTest extends TestCase
         self::assertSame($isSuccess, $job->isSuccess);
     }
 
-    public function isSuccessProvider(): Generator
+    public static function isSuccessProvider(): Generator
     {
         yield 'success' => ['status' => 'success', 'isSuccess' => true];
         yield 'warning' => ['status' => 'warning', 'isSuccess' => true];
@@ -106,7 +106,7 @@ class JobTest extends TestCase
 
     public function testIsSuccessIsNullOnAResponseWithoutTheField(): void
     {
-        // response from an older public-api that does not return the isSuccess field yet
+        // older public-api without the field
         $jobData = $this->validJobData;
         unset($jobData['isSuccess']);
 

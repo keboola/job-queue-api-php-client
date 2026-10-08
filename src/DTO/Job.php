@@ -34,12 +34,7 @@ final readonly class Job implements ResponseModelInterface
         public ?array $result,
         public ?array $usageData,
         public bool $isFinished,
-        /**
-         * Whether a finished job delivered what it was asked to do.
-         *
-         * - `null` while `$isFinished` is `false`; use `$isFinished`, not this, to know the job is done.
-         * - Also `null` for a finished job on an API older than the field.
-         */
+        /** Whether a finished job delivered; `null` until finished, or from an older API. */
         public ?bool $isSuccess,
         public string $url,
         public ?string $branchId,
@@ -103,22 +98,13 @@ final readonly class Job implements ResponseModelInterface
         );
     }
 
-    /**
-     * Strictly `status === success`.
-     *
-     * - Narrower than the `$isSuccess` field, which is also `true` for `warning`.
-     */
+    /** Strictly `success`; unlike `$isSuccess`, `false` for `warning`. */
     public function isSuccess(): bool
     {
         return $this->status === JobStatuses::SUCCESS->value;
     }
 
-    /**
-     * Strictly `status === error`.
-     *
-     * - A different question from `$isSuccess === false`, which also covers `cancelled` and
-     *   `terminated`.
-     */
+    /** Strictly `error`; `$isSuccess === false` also covers `cancelled` and `terminated`. */
     public function isError(): bool
     {
         return $this->status === JobStatuses::ERROR->value;
