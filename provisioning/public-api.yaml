@@ -179,12 +179,6 @@ spec:
                 configMapKeyRef:
                   name: dev-job-queue-api-php-client-environments
                   key: storageApiUrl
-            - name: LOGS_S3_BUCKET
-              value: ''
-            - name: LOG_ABS_CONTAINER
-              value: ''
-            - name: LOG_ABS_CONNECTION_STRING
-              value: ''
             - name: INTERNAL_API_URL
               value: 'http://dev-job-queue-internal-api-service:92'
             - name: INTERNAL_API_TOKEN
