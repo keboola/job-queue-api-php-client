@@ -147,6 +147,24 @@ class JobTest extends TestCase
         self::assertSame(['11', '22'], $job->onlyFlowTaskIds);
     }
 
+    public function testRuntimeTimezoneIsMappedFromResponse(): void
+    {
+        $jobData = $this->validJobData;
+        $jobData['runtimeTimezone'] = 'Europe/Prague';
+
+        $job = Job::fromResponseData($jobData);
+
+        self::assertSame('Europe/Prague', $job->runtimeTimezone);
+    }
+
+    public function testRuntimeTimezoneIsNullOnAResponseWithoutTheField(): void
+    {
+        // older public-api without the field
+        $job = Job::fromResponseData($this->validJobData);
+
+        self::assertNull($job->runtimeTimezone);
+    }
+
     public function invalidJobDataProvider(): Generator
     {
         yield 'missing base fields' => [

@@ -53,6 +53,8 @@ final readonly class Job implements ResponseModelInterface
         public ?array $onlyOrchestrationTaskIds,
         public ?array $onlyFlowTaskIds,
         public ?string $previousJobId,
+        /** Timezone the job was triggered in (e.g. the schedule's cron timezone), null for manual runs. */
+        public ?string $runtimeTimezone,
     ) {
     }
 
@@ -95,6 +97,7 @@ final readonly class Job implements ResponseModelInterface
             onlyOrchestrationTaskIds: $data['onlyOrchestrationTaskIds'],
             onlyFlowTaskIds: $data['onlyFlowTaskIds'] ?? $data['onlyOrchestrationTaskIds'],
             previousJobId: $data['previousJobId'],
+            runtimeTimezone: $data['runtimeTimezone'] ?? null,
         );
     }
 
