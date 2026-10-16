@@ -16,6 +16,7 @@ class JobData
     private ?string $orchestrationJobId;
     private ?string $parentRunId;
     private ?array $onlyFlowTaskIds;
+    private ?string $runtimeTimezone;
 
     public function __construct(
         string $componentId,
@@ -28,6 +29,7 @@ class JobData
         ?string $orchestrationJobId = null,
         ?string $parentRunId = null,
         ?array $onlyFlowTaskIds = null,
+        ?string $runtimeTimezone = null,
     ) {
         $this->componentId = $componentId;
         $this->configId = $configId;
@@ -39,6 +41,7 @@ class JobData
         $this->orchestrationJobId = $orchestrationJobId;
         $this->parentRunId = $parentRunId;
         $this->onlyFlowTaskIds = $onlyFlowTaskIds;
+        $this->runtimeTimezone = $runtimeTimezone;
     }
 
     public function getArray(): array
@@ -57,6 +60,10 @@ class JobData
 
         if ($this->onlyFlowTaskIds !== null) {
             $data['onlyFlowTaskIds'] = $this->onlyFlowTaskIds;
+        }
+
+        if ($this->runtimeTimezone !== null) {
+            $data['runtimeTimezone'] = $this->runtimeTimezone;
         }
 
         return $data;
