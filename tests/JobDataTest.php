@@ -41,6 +41,7 @@ class JobDataTest extends TestCase
             '123456',
             '67890',
             ['11', '22'],
+            'Europe/Prague',
         );
 
         self::assertEquals(
@@ -55,6 +56,7 @@ class JobDataTest extends TestCase
                 'parentRunId' => '67890',
                 'configData' => ['foo' => 'bar'],
                 'onlyFlowTaskIds' => ['11', '22'],
+                'runtimeTimezone' => 'Europe/Prague',
             ],
             $jobData->getArray(),
         );
